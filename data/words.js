@@ -9,9 +9,16 @@
 //                              不同字族、不同詞性，環繞一個情境（thematic cluster）而不是同類清單。
 //
 // pos = 詞性（抄寫單要寫進練習本：英文／詞性／中文）
+//
+// chunks 拆解規則（兩層，不要混用）：
+//   ① 多音節字先切音節（一個母音「音」＝一個音節）：pen-cil、hap-py、o-pen
+//   ② 單音節字切「首音 ＋ 韻腳」：c-at、sh-op、st-op
+//      —— 不再往下切成單一字母。-at 當一整塊記，字族類推才生效；切成 a-t 就失效了
+//   ③ 母音開頭的單音節字切「母音組合 ＋ 尾音」：ea-t
+//   ④ 不規則字不切，標 sight:true（write、friend）
 // sight:true = 不規則字，拼讀規則救不了，要整個字記起來（App 會標出來提醒）
 window.EN_WORDS = {
-  version: "seed-2026-09-04",
+  version: "seed-2026-09-04b",
   units: [
     {
       id: 1, type: "phonics", title: "-at ／ -an 家族", sub: "短母音 a ‧ 練唸不練意思", source: "示範單元",
@@ -52,20 +59,20 @@ window.EN_WORDS = {
       // 12 個字的開頭字母全部不同、字族不重複、名詞/動詞/形容詞混合 —— 這是詞彙單元該長的樣子。
       // 對照組（不要這樣編）：pencil / pen / ruler / eraser / marker / crayon 全是筆狀文具，會互相干擾。
       words: [
-        {w:"book", pos:"n.",   zh:"書",     chunks:"b-oo-k",   family:"", sent:"This book is new.",       sentZh:"這本書是新的。"},
+        {w:"book", pos:"n.",   zh:"書",     chunks:"b-ook",   family:"", sent:"This book is new.",       sentZh:"這本書是新的。"},
         {w:"write", pos:"v.",  zh:"寫",     chunks:"",         family:"", sight:true,
                                                                 sent:"I write my name.",        sentZh:"我寫我的名字。"},
-        {w:"desk", pos:"n.",   zh:"書桌",   chunks:"d-e-sk",   family:"", sent:"Put it on the desk.",     sentZh:"把它放在書桌上。"},
+        {w:"desk", pos:"n.",   zh:"書桌",   chunks:"d-esk",   family:"", sent:"Put it on the desk.",     sentZh:"把它放在書桌上。"},
         {w:"open", pos:"v.",   zh:"打開",   chunks:"o-pen",    family:"", sent:"Open your book.",         sentZh:"打開你的書。"},
         {w:"new", pos:"adj.",    zh:"新的",   chunks:"n-ew",     family:"", sent:"I have a new bag.",       sentZh:"我有一個新書包。"},
         {w:"chair", pos:"n.",  zh:"椅子",   chunks:"ch-air",   family:"", sent:"Sit on the chair.",       sentZh:"坐在椅子上。"},
-        {w:"read", pos:"v.",   zh:"讀",     chunks:"r-ea-d",   family:"", sent:"We read together.",       sentZh:"我們一起讀。"},
+        {w:"read", pos:"v.",   zh:"讀",     chunks:"r-ead",   family:"", sent:"We read together.",       sentZh:"我們一起讀。"},
         {w:"friend", pos:"n.", zh:"朋友",   chunks:"",         family:"", sight:true,
                                                                 sent:"He is my friend.",        sentZh:"他是我的朋友。"},
         {w:"happy", pos:"adj.",  zh:"快樂的", chunks:"hap-py",   family:"", sent:"I am happy today.",       sentZh:"我今天很快樂。"},
-        {w:"lunch", pos:"n.",  zh:"午餐",   chunks:"l-un-ch",  family:"", sent:"Lunch is at twelve.",     sentZh:"午餐是十二點。"},
+        {w:"lunch", pos:"n.",  zh:"午餐",   chunks:"l-unch",  family:"", sent:"Lunch is at twelve.",     sentZh:"午餐是十二點。"},
         {w:"eat", pos:"v.",    zh:"吃",     chunks:"ea-t",     family:"", sent:"We eat lunch here.",      sentZh:"我們在這裡吃午餐。"},
-        {w:"tired", pos:"adj.",  zh:"累的",   chunks:"ti-red",   family:"", sent:"I am tired now.",         sentZh:"我現在很累。"}
+        {w:"tired", pos:"adj.",  zh:"累的",   chunks:"t-ired",   family:"", sent:"I am tired now.",         sentZh:"我現在很累。"}
       ]
     }
   ]
