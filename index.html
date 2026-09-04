@@ -433,6 +433,8 @@ details.patbox:not([open]) > :not(summary){display:none !important;}
 .wcard{ display:flex; align-items:center; gap:10px; background:var(--panel); padding:12px 14px;
   margin-top:10px; text-align:left; }
 .wcard.done{ opacity:.5; }
+.wpic{ font-size:40px; line-height:1; min-width:48px; text-align:center; cursor:pointer; }
+.wpic:active{ transform:scale(.92); }
 .wno{ font-size:24px; font-weight:900; color:#c9bfa4; min-width:26px; }
 .wmain{ flex:1; min-width:0; }
 .wcard .ww{ font-family:"SF Mono",Menlo,Consolas,monospace; font-size:34px; font-weight:800;
@@ -447,6 +449,8 @@ details.patbox:not([open]) > :not(summary){display:none !important;}
 .wbtn.on{ background:var(--stone); }
 .homebig{ width:100%; font-size:19px; }
 /* 不規則字提醒 */
+.learnpic{ font-size:64px; line-height:1.1; margin:6px 0 2px; }
+.zh-big .pos{ font-size:14px; }
 .sightbadge{display:inline-block; margin-top:6px; font-size:15px; font-weight:800; color:#5a4500;
   background:var(--gold); padding:5px 14px; border-radius:16px;}
 .utype{font-size:11px; font-weight:800; padding:1px 7px; border-radius:10px; vertical-align:1px;}
@@ -516,7 +520,7 @@ details.patbox:not([open]) > :not(summary){display:none !important;}
 <script>
 "use strict";
 const DATA = window.EN_WORDS || {units:[]};
-const APP_VER = "v4｜2026.09.04 音塊規則統一";
+const APP_VER = "v5｜2026.09.04 日期單元＋圖片抄寫單";
 const LS_KEY = "ewq_state_v1";
 let store = loadStore();
 function loadStore(){ try{return JSON.parse(localStorage.getItem(LS_KEY))||{}}catch(e){return {}} }
@@ -543,8 +547,6 @@ let S = {uid:null, q:null};
 // ====== 單字索引 ======
 function allUnits(){ return DATA.units||[]; }
 function unitById(id){ return allUnits().find(u=>u.id===id); }
-// phonics＝字族單元（練見字讀音，不考意思）；vocab＝詞彙單元（記意思）。舊資料沒標的一律當 vocab。
-function unitType(uid){ const u=unitById(uid); return (u&&u.type)||"vocab"; }
 function keyOf(uid,w){ return uid+"|"+w; }
 function boxOf(uid,w){ return store.box[keyOf(uid,w)]||0; }
 // 「學過」＝跑過學新字，或已經在闖關裡答對過（兩條路都算數，統計才不會互相打架）
@@ -785,9 +787,9 @@ function viewHome(){
   const weak=weakList();
   const cards=allUnits().map(u=>{ const p=unitProgress(u);
     return `<div class="lesson-card block" data-uid="${u.id}">
-      <div class="no">Unit ${u.id}　${unitType(u.id)==="phonics"?'<span class="utype ph">拼讀</span>':'<span class="utype vo">詞彙</span>'}</div>
+      <div class="no">${esc(u.sub||"")}${u.id===todayKey()?'　<span class="utype vo">今天</span>':''}</div>
       <div class="nm">${esc(u.title)}</div>
-      <div class="meta">${esc(u.sub||"")} ‧ ${p.n} 字</div>
+      <div class="meta">${p.n} 個字 ‧ 寫好 ${writeDoneOf(u.id)}／${p.n}</div>
       <div class="bar2"><i style="width:${p.pct}%"></i></div>
       <div class="meta">學過 ${p.learned}／${p.n}　💎精通 ${p.mastered}</div>
     </div>`; }).join("");
@@ -797,8 +799,8 @@ function viewHome(){
       <div class="sub">聽 → 說 → 拆 → 寫</div>
     </div>
     ${dailyHTML()}
-    <div class="home-sec"><div class="home-h">📝 練習本（每天 10 分鐘）</div>
-      <button class="btn btn-gold homebig" id="goWrite">今天要寫的 5 個字　${writeDoneCount()}／5</button></div>
+    <div class="home-sec"><div class="home-h">📝 今天的功課</div>
+      <button class="btn btn-gold homebig" id="goWrite">${esc(todayUnit().title)}　要寫的 5 個字　${writeDoneOf(todayUnit().id)}／${todayUnit().words.length}</button></div>
     ${weak.length?`<div class="home-sec"><div class="home-h">📦 我的單字寶箱（答錯過的字 ${weak.length}）</div>
       <button class="btn btn-red" id="goWeak" style="width:100%">打開單字寶箱 ⛏️</button></div>`:""}
     <div class="home-sec"><div class="home-h">📚 選一個單元</div>
@@ -808,106 +810,115 @@ function viewHome(){
       <button class="btn btn-stone" id="goHelp">❓ 怎麼玩</button>
     </div>`;
   elView.querySelectorAll(".lesson-card").forEach(c=>c.onclick=()=>{ sPlace(); S.uid=+c.dataset.uid; viewUnit(); });
-  document.getElementById("goWrite").onclick=()=>{ sPlace(); viewWrite(); };
+  document.getElementById("goWrite").onclick=()=>{ sPlace(); viewWrite(todayUnit().id); };
   const gw=document.getElementById("goWeak"); if(gw) gw.onclick=()=>{ sClick(); startQuiz("mix", null); };
   document.getElementById("goStats").onclick=()=>{ sClick(); viewStats(); };
   document.getElementById("goHelp").onclick=()=>{ sClick(); viewHelp(); };
 }
 
 
-// ====== 今日抄寫單（練習本用）======
-// 每天固定 5 個字，來源優先序：單字寶箱（答錯過的）→ 複習中 → 還沒學過。
-// 同一天重開 App 清單不變，這樣他才不會換一份新的字重寫。
+// ====== 抄寫單（練習本用）======
+// 一個日期單元＝當天要寫的 5 個字，全部都要寫，不是只挑錯的。
+// 進度存在 store.write[unitId].done[word]。
 const POS_ZH={"n.":"名詞","v.":"動詞","adj.":"形容詞","adv.":"副詞","aux.":"助動詞","num.":"數字","prep.":"介系詞","pron.":"代名詞"};
 function todayKey(){ return new Date().toLocaleDateString('en-CA'); }
 function wordOf(uid,w){ const u=unitById(uid); return u && u.words.find(x=>x.w===w); }
-function writeSheet(){
-  const d=todayKey();
-  if(store.write && store.write.date===d) return store.write;
-  const seen={}, out=[];
-  const push=arr=>{ for(const x of arr){ const k=keyOf(x.uid,x.w);
-    if(seen[k]) continue; seen[k]=1; out.push(x); if(out.length>=5) return true; } return false; };
-  const weak=weakList().map(p=>({uid:p.uid,w:p.w.w}));
-  const mid =shuffle(allPairs().filter(p=>{const b=boxOf(p.uid,p.w.w); return b>=1&&b<3;})).map(p=>({uid:p.uid,w:p.w.w}));
-  const fresh=shuffle(allPairs().filter(p=>!isSeen(p.uid,p.w.w))).map(p=>({uid:p.uid,w:p.w.w}));
-  push(weak) || push(mid) || push(fresh);
-  store.write={date:d, list:out, done:{}}; saveStore(); return store.write;
+function writeRec(uid){
+  store.write = store.write || {};
+  store.write[uid] = store.write[uid] || {done:{}};
+  return store.write[uid];
 }
-function writeDoneCount(){ const W=writeSheet(); return W.list.filter(x=>W.done[keyOf(x.uid,x.w)]).length; }
-function viewWrite(){
-  const W=writeSheet();
-  crumb("今天要寫的字");
-  const rows=W.list.map((it,i)=>{
-    const w=wordOf(it.uid,it.w); if(!w) return "";
-    const k=keyOf(it.uid,it.w), done=!!W.done[k];
-    return `<div class="wcard block ${done?'done':''}" data-k="${k}">
+function writeDoneOf(uid){
+  const u=unitById(uid); if(!u) return 0;
+  const rec=writeRec(uid);
+  return u.words.filter(w=>rec.done[w.w]).length;
+}
+// 今天有單元就用今天的；沒有就用第一個還沒寫完的
+function todayUnit(){
+  const t=todayKey();
+  return unitById(t) || allUnits().find(u=>writeDoneOf(u.id) < u.words.length) || allUnits()[0];
+}
+
+function viewWrite(uid){
+  const u=unitById(uid); if(!u) return viewHome();
+  S.uid=u.id;
+  const rec=writeRec(u.id), n=writeDoneOf(u.id);
+  crumb(u.title+" 要寫的字");
+  const rows=u.words.map((w,i)=>{
+    const done=!!rec.done[w.w];
+    return `<div class="wcard block ${done?'done':''}" data-w="${esc(w.w)}">
       <div class="wno">${i+1}</div>
+      <div class="wpic" data-w="${esc(w.w)}">${esc(w.img||"🔤")}</div>
       <div class="wmain">
         <div class="ww" data-w="${esc(w.w)}">${esc(w.w)}</div>
         <div class="wmeta"><span class="pos">${esc(w.pos||"")}${esc(POS_ZH[w.pos]||"")}</span>${esc(w.zh)}</div>
-        ${(w.sight||!w.chunks)?'<div class="wchunk sight">⭐ 這個字拼不出來，要整個記起來</div>'
+        ${(w.sight||!w.chunks)?'<div class="wchunk sight">⭐ 這個字拼不出來，要整個記</div>'
           :`<div class="wchunk">${esc(w.chunks)}</div>`}
       </div>
       <button class="wbtn ${done?'on':''}">${done?'✅ 已寫':'寫好了'}</button>
     </div>`; }).join("");
-  const n=writeDoneCount();
   elView.innerHTML=`<div class="writehead block">
-      <div class="q-prompt" style="text-align:center">📝 今天要寫的 5 個字</div>
-      <div class="statline" style="text-align:center">照著抄進練習本 ‧ 每個字寫 5 次 ‧ 已完成 ${n}／5</div>
+      <div class="q-prompt" style="text-align:center">📝 ${esc(u.title)}　要寫的 5 個字</div>
+      <div class="statline" style="text-align:center">全部都要寫 ‧ 每個字寫 5 次 ‧ 已完成 ${n}／${u.words.length}</div>
       <div class="wsteps">
         <div class="wstep s-look"><b>1</b>看著抄</div>
-        <div class="wstep s-look"><b>2</b>看著抄<br>＋唸出來</div>
+        <div class="wstep s-look"><b>2</b>看著抄</div>
         <div class="wstep s-cov"><b>3</b>蓋起來寫</div>
         <div class="wstep s-cov"><b>4</b>蓋起來寫</div>
-        <div class="wstep s-cov"><b>5</b>蓋起來寫<br>＋寫中文</div>
+        <div class="wstep s-cov"><b>5</b>蓋起來寫</div>
       </div>
-      <div class="hint">前 2 次看著抄，後 3 次一定要蓋起來。蓋起來想出來的那一次，才是真的記住。</div>
+      <div class="hint">每個字都要寫 <b>英文 ／ 詞性 ／ 中文</b> 三樣。前 2 次看著抄，後 3 次一定要蓋起來。</div>
     </div>
     ${rows}
-    <div class="navrow" style="margin-top:12px"><button class="btn btn-stone" id="home">🏠 回首頁</button></div>`;
-  elView.querySelectorAll(".ww").forEach(e=>e.onclick=()=>{ sClick(); speak(e.dataset.w); });
+    <div class="navrow" style="margin-top:12px">
+      <button class="btn btn-diamond" id="quiz">寫完了，來考考自己 🎲</button>
+      <button class="btn btn-stone" id="home">🏠 回首頁</button>
+    </div>`;
+  elView.querySelectorAll(".ww, .wpic").forEach(e=>e.onclick=()=>{ sClick(); speak(e.dataset.w); });
   elView.querySelectorAll(".wcard").forEach(card=>{
     card.querySelector(".wbtn").onclick=()=>{
-      const k=card.dataset.k; if(W.done[k]) return;
-      W.done[k]=1; saveStore(); sOk(); addXP(3); rewardPop("+3 XP"); dailyProgress("write");
+      const key=card.dataset.w; if(rec.done[key]) return;
+      rec.done[key]=1; saveStore(); sOk(); addXP(3); rewardPop("+3 XP"); dailyProgress("write");
       buddyReact('happy');
-      if(writeDoneCount()>=5){ addCoins(10); confetti(); sWin();
+      if(writeDoneOf(u.id)>=u.words.length){ addCoins(10); confetti(); sWin();
         toast("📝 今天的 5 個字都寫完了！　+10💰",""); }
-      viewWrite();
+      viewWrite(u.id);
     };
   });
+  document.getElementById("quiz").onclick=()=>{ sPlace(); startQuiz("mix", u.id); };
   document.getElementById("home").onclick=()=>{ sClick(); viewHome(); };
 }
 
 // ====== 單元頁：選模式 ======
 function viewUnit(){
   const u=unitById(S.uid); if(!u) return viewHome();
-  const p=unitProgress(u), isPhonics=unitType(u.id)==="phonics";
-  crumb("Unit "+u.id+" "+u.title);
+  const p=unitProgress(u);
+  crumb(u.title+" "+(u.sub||""));
   const unlearned=u.words.filter(w=>!isSeen(u.id,w.w)).length;
   elView.innerHTML=`
     <div class="card block">
-      <div class="q-prompt">Unit ${u.id}　${esc(u.title)}</div>
-      <div class="statline">${esc(u.sub||"")} ‧ 共 ${p.n} 字 ‧ 學過 ${p.learned} ‧ 💎精通 ${p.mastered}</div>
+      <div class="q-prompt">📅 ${esc(u.title)}　${esc(u.sub||"")}</div>
+      <div class="statline">今天的 ${p.n} 個字 ‧ 學過 ${p.learned} ‧ 💎精通 ${p.mastered}</div>
     </div>
     <div class="home-sec" style="margin-top:12px">
       <div class="home-h">① 先學新字（聽 → 說 → 拆）</div>
+      <button class="btn btn-gold" id="mWrite" style="width:100%;margin-bottom:8px">📝 寫這 5 個字（${writeDoneOf(u.id)}／${p.n}）</button>
       <button class="btn btn-grass" id="mLearn" style="width:100%">📖 學新字${unlearned?`（還有 ${unlearned} 個沒學過）`:"（全部複習一遍）"}</button>
     </div>
     <div class="home-sec" style="margin-top:14px">
       <div class="home-h">② 闖關（答對才算會）</div>
       <div class="modegrid">
         <button class="btn btn-diamond" id="mListen">🔊 聽音選字</button>
-        ${isPhonics?"":'<button class="btn btn-wood" id="mMean">🔤 看字選意思</button>'}
+        <button class="btn btn-wood"    id="mMean">🔤 看字選意思</button>
         <button class="btn btn-gold"    id="mSpell">🧱 拼字磚</button>
         <button class="btn btn-red"     id="mMix">🎲 混合闖關</button>
       </div>
-      ${isPhonics?'<div class="ds" style="margin-top:8px">這是字族單元，練「看到字唸得出來」。同一家的字長得太像，不考中文意思。</div>':""}
     </div>
     <div class="home-sec" style="margin-top:14px">
       <button class="btn btn-stone" id="mList">📋 單字表</button>
       <button class="btn btn-stone" id="mBack">🏠 回首頁</button>
     </div>`;
+  document.getElementById("mWrite").onclick=()=>{ sPlace(); viewWrite(u.id); };
   document.getElementById("mLearn").onclick=()=>{ sPlace(); startLearn(); };
   document.getElementById("mListen").onclick=()=>{ sPlace(); startQuiz("listen", S.uid); };
   const mm=document.getElementById("mMean");
@@ -1233,12 +1244,14 @@ function renderLearn(){
     <div class="q-prompt">① 先用耳朵聽，不要看字</div>
     <button class="bigspk" id="spk">🔊<div class="bigspk-n" id="heard">還要聽 3 次</div></button>
     <div id="reveal" class="reveal-hide">
-      <div class="q-prompt" style="margin-top:14px">② 換你唸唸看　③ 看看它怎麼拆</div>
+      <div class="q-prompt" style="margin-top:14px">② 換你唸唸看</div>
+      <div class="learnpic">${esc(w.img||"🔤")}</div>
+      <div class="q-prompt">③ 看圖，把聲音跟畫面連起來　④ 看看它怎麼拆</div>
       <div class="word-big" id="wordBig">${esc(w.w)}</div>
       ${(w.sight||!w.chunks)
         ? '<div class="sightbadge">⭐ 這個字拼不出來，要整個記起來</div>'
         : `<div class="chunks" id="chunks">${esc(w.chunks)}</div>`}
-      <div class="zh-big">${esc(w.zh)}</div>
+      <div class="zh-big"><span class="pos">${esc(w.pos||"")}${esc(POS_ZH[w.pos]||"")}</span>${esc(w.zh)}</div>
       ${w.family?`<div class="fam">🏠 住在 <b>${esc(w.family)}</b> 這一家</div>`:""}
       ${w.sent?`<div class="sent">${esc(w.sent)}<div class="sentzh">${esc(w.sentZh||"")}</div></div>`:""}
       <div class="navrow">
@@ -1274,12 +1287,14 @@ function renderLearn(){
 function renderLearnDone(){
   unlock("first_learn"); confetti(); sWin();
   elView.innerHTML=`<div class="card block">
-    <div class="q-prompt">📖 這一輪新字學完了！</div>
-    <div class="statline">接下來去闖關，看看真的記住了沒有</div>
+    <div class="q-prompt">📖 前四步走完了！</div>
+    <div class="statline">最後一步是「寫」——去把這 5 個字寫進練習本</div>
     <div class="navrow">
-      <button class="btn btn-diamond" id="toQuiz">🎲 去闖關</button>
+      <button class="btn btn-gold" id="toWrite">📝 去寫這 5 個字</button>
+      <button class="btn btn-diamond" id="toQuiz">🎲 先考考自己</button>
       <button class="btn btn-stone" id="back">← 回單元</button>
     </div></div>`;
+  document.getElementById("toWrite").onclick=()=>{ sPlace(); viewWrite(S.uid); };
   document.getElementById("toQuiz").onclick=()=>{ sPlace(); startQuiz("mix", S.uid); };
   document.getElementById("back").onclick=()=>{ sClick(); viewUnit(); };
 }
@@ -1310,14 +1325,15 @@ function startQuiz(mode, uid){
 //                        （Tinkham/Waring 的 interference 研究；Nation 的 avoid similar words）
 function distractors(item, n, field, mode){
   const me=item.w, pool=allPairs().filter(p=>p.w.w!==me.w);
-  const wantSimilar = (mode!=="mean");
   const score=p=>{ let s=0;
-    if(p.uid===item.uid) s+=3;                                  // 同單元一律優先（選項才合理）
-    const sameFam = me.family && p.w.family===me.family;
-    const sameLen = p.w.w.length===me.w.length;
-    const sameIni = p.w.w[0]===me.w[0];
-    if(wantSimilar){ if(sameFam)s+=3; if(sameLen)s+=2; if(sameIni)s+=1; }
-    else           { if(sameFam)s-=4; if(sameIni)s-=2; if(sameLen)s-=1; }
+    if(p.uid===item.uid) s+=3;                    // 同一天的字優先當選項（比較合理）
+    if(mode==="listen"){                          // 聽音選字＝辨音，挑長得像的才有鑑別度
+      if(p.w.w.length===me.w.length) s+=2;
+      if(p.w.w[0]===me.w[0]) s+=1;
+    } else {                                      // 看字選意思＝記意思，避開長得像的
+      if(p.w.w[0]===me.w[0]) s-=2;
+      if(p.w.w.length===me.w.length) s-=1;
+    }
     return s; };
   const sorted=shuffle(pool).sort((a,b)=>score(b)-score(a));
   const out=[], seen={};
@@ -1337,10 +1353,8 @@ function renderQ(){
   const Q=S.q;
   if(Q.idx>=Q.queue.length) return renderQuizDone();
   const item=Q.queue[Q.idx], w=item.w;
-  // 字族單元不考中文意思（那組字長得太像，考意思＝製造混淆），混合闖關只在聽音與拼字之間輪
-  const pool = unitType(item.uid)==="phonics" ? ["listen","spell"] : ["listen","mean","spell"];
+  const pool = ["listen","mean","spell"];
   let mode = Q.mode==="mix" ? pool[Q.idx % pool.length] : Q.mode;
-  if(!pool.includes(mode)) mode = "listen";      // 單字寶箱混到字族字時的防呆
   Q.curMode=mode;
   const total=Q.queue.length, pct=Math.round(Q.idx/total*100);
   const hearts="❤️".repeat(Math.min(Q.ok,10))||"—";
@@ -1511,12 +1525,14 @@ function viewHelp(){
   elView.innerHTML=`<div class="card block" style="text-align:left">
     <div class="q-prompt">❓ 怎麼玩</div>
     <div class="helpsec"><b>① 先「學新字」</b><div class="ds">
-      先聽 3 次（不看字）→ 自己唸一次 → 看它怎麼拆 → 才看拼法。順序不要換。</div></div>
-    <div class="helpsec"><b>② 再去「闖關」</b><div class="ds">
+      聽 3 次（不看字）→ 自己唸 → 看圖 → 看它怎麼拆。順序不要換。</div></div>
+    <div class="helpsec"><b>② 再「寫這 5 個字」</b><div class="ds">
+      每天就是這 5 個字，<b>5 個都要寫</b>，不是只寫不會的。每個字寫 5 次：前 2 次看著抄，後 3 次蓋起來寫。</div></div>
+    <div class="helpsec"><b>③ 最後「闖關」</b><div class="ds">
       🔊 聽音選字＝聽得懂　🔤 看字選意思＝看得懂　🧱 拼字磚＝寫得出來。三個都會，才算真的會。</div></div>
-    <div class="helpsec"><b>③ 答錯不用怕</b><div class="ds">
+    <div class="helpsec"><b>④ 答錯不用怕</b><div class="ds">
       錯的字會自動進「單字寶箱」，下次優先出現。答對三次它才會變成 💎。</div></div>
-    <div class="helpsec"><b>④ 每天 20 分鐘</b><div class="ds">
+    <div class="helpsec"><b>⑤ 每天 20 分鐘</b><div class="ds">
       前 10 分鐘玩這個 App，後 10 分鐘把「今天要寫的 5 個字」抄進練習本。每天做一點，連續天數 🔥 會一直加上去。</div></div>
     <div class="helpsec"><b>⑤ 練習本怎麼寫</b><div class="ds">
       每個字寫 5 次：<b>前 2 次看著抄</b>（同時唸出來），<b>後 3 次把字蓋起來自己寫</b>。
