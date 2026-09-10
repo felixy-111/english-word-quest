@@ -1,58 +1,37 @@
-// 單字大冒險 ── 單字資料（演示 MVP）
+// 單字大冒險 ── 單字資料
 //
-// 單元＝日期，一天 5 個字，全部都要寫。
+// 單元＝日期，一天 5 個字，全部都要寫。提案是週一到週五，所以只排平日。
 // 欄位：w 英文｜pos 詞性｜zh 中文｜emoji 備援圖示｜chunks 音塊｜anim 微動效
 //
 // 圖片：img/<單字>.png，由 fetch_images.py 從 ARASAAC 抓下來（CC BY-NC-SA）。
 //       圖檔載入失敗時自動退回 emoji，所以 emoji 欄位不要拿掉。
 //
 // chunks 拆解規則（兩層，不要混用）：
-//   ① 多音節字先切音節：pen-cil、hap-py、rab-bit
-//   ② 單音節字切「首音 ＋ 韻腳」：c-at、sh-op
+//   ① 多音節字先切音節：pa-per、plas-tic、re-cy-cle
+//   ② 單音節字切「首音 ＋ 韻腳」：pl-ant、c-at、sh-op
 //   ③ 母音開頭的單音節字切「母音組合 ＋ 尾音」：ea-t
-//   ④ 不規則字不切，標 sight:true（write）
+//   ④ 不規則字不切，標 sight:true
 //
-// anim 只給動作看得出來的字，在「看」和翻答案時播一下：
-//   hop 上下跳｜shake 左右晃｜pulse 輕微放大
+// ⚠️ chunks 留空「不等於」這個字不規則，只是還沒填。程式分得出來（見 chunkState）：
+//    要標成「整個記」必須明寫 sight:true。
 //
-// 之後拿到安親班單字表，用 build_words.py 覆蓋這個檔，再跑 fetch_images.py 補圖。
+// 老師上課現場加的字走 App 裡的「👩‍🏫 老師：加單字」，存在裝置的 localStorage，
+// 匯出後再灌進這個檔才會跟著上線給孩子。
 window.EN_WORDS = {
-  version: "demo-2026-09-04",
+  version: "cs3-2026-09-14",
   units: [
-    { id:"2026-09-04", title:"9 / 4", sub:"星期五", words:[
-      {w:"book",   pos:"n.",  zh:"書",   emoji:"📖", chunks:"b-ook"},
-      {w:"bag",    pos:"n.",  zh:"書包", emoji:"🎒", chunks:"b-ag"},
-      {w:"pen",    pos:"n.",  zh:"筆",   emoji:"🖊️", chunks:"p-en"},
-      {w:"ruler",  pos:"n.",  zh:"尺",   emoji:"📏", chunks:"ru-ler"},
-      {w:"clock",  pos:"n.",  zh:"時鐘", emoji:"🕐", chunks:"cl-ock"}
-    ]},
-    { id:"2026-09-07", title:"9 / 7", sub:"星期一", words:[
-      {w:"cat",    pos:"n.",  zh:"貓",   emoji:"🐱", chunks:"c-at"},
-      {w:"dog",    pos:"n.",  zh:"狗",   emoji:"🐶", chunks:"d-og"},
-      {w:"bird",   pos:"n.",  zh:"鳥",   emoji:"🐦", chunks:"b-ird"},
-      {w:"fish",   pos:"n.",  zh:"魚",   emoji:"🐟", chunks:"f-ish"},
-      {w:"rabbit", pos:"n.",  zh:"兔子", emoji:"🐰", chunks:"rab-bit"}
-    ]},
-    { id:"2026-09-08", title:"9 / 8", sub:"星期二", words:[
-      {w:"apple",  pos:"n.",  zh:"蘋果", emoji:"🍎", chunks:"ap-ple"},
-      {w:"bread",  pos:"n.",  zh:"麵包", emoji:"🍞", chunks:"br-ead"},
-      {w:"milk",   pos:"n.",  zh:"牛奶", emoji:"🥛", chunks:"m-ilk"},
-      {w:"rice",   pos:"n.",  zh:"飯",   emoji:"🍚", chunks:"r-ice"},
-      {w:"egg",    pos:"n.",  zh:"蛋",   emoji:"🥚", chunks:"e-gg"}
-    ]},
-    { id:"2026-09-09", title:"9 / 9", sub:"星期三", words:[
-      {w:"run",    pos:"v.",  zh:"跑",   emoji:"🏃", chunks:"r-un",  anim:"shake"},
-      {w:"jump",   pos:"v.",  zh:"跳",   emoji:"🤸", chunks:"j-ump", anim:"hop"},
-      {w:"eat",    pos:"v.",  zh:"吃",   emoji:"🍽️", chunks:"ea-t",  anim:"pulse"},
-      {w:"sleep",  pos:"v.",  zh:"睡覺", emoji:"😴", chunks:"sl-eep",anim:"pulse"},
-      {w:"write",  pos:"v.",  zh:"寫",   emoji:"✍️", chunks:"", sight:true, anim:"shake"}
-    ]},
-    { id:"2026-09-10", title:"9 / 10", sub:"星期四", words:[
-      {w:"happy",  pos:"adj.", zh:"快樂的", emoji:"😀", chunks:"hap-py"},
-      {w:"sad",    pos:"adj.", zh:"難過的", emoji:"😢", chunks:"s-ad"},
-      {w:"hot",    pos:"adj.", zh:"熱的",   emoji:"🔥", chunks:"h-ot"},
-      {w:"cold",   pos:"adj.", zh:"冷的",   emoji:"🧊", chunks:"c-old"},
-      {w:"big",    pos:"adj.", zh:"大的",   emoji:"🐘", chunks:"b-ig", anim:"pulse"}
+    // 來源：安親班 CS3（9/7，Lily 老師）指定的拼字考單字。主題 Save the Earth。
+    { id:"2026-09-14", title:"9 / 14", sub:"星期一", words:[
+      // 這課的作業是 Write 6 ways to save the earth，「plant trees（種樹）」是標準答案，
+      // 所以用動詞「種植」而不是名詞「植物」——ARASAAC 抓到的圖也正是動手種下去那張。
+      {w:"plant",   pos:"v.", zh:"種植", emoji:"🌱", chunks:"pl-ant"},
+      {w:"paper",   pos:"n.", zh:"紙",   emoji:"📄", chunks:"pa-per"},
+      {w:"plastic", pos:"n.", zh:"塑膠", emoji:"🥤", chunks:"plas-tic"},
+      {w:"recycle", pos:"v.", zh:"回收", emoji:"♻️", chunks:"re-cy-cle"},
+      // 老師寫的是大寫 Earth（地球，專有名詞），拼字考要大寫，別改成小寫。
+      // 不切音塊的理由：ear 在 hear／near／year 唸 /ɪr/，但 earth／early／learn 唸 /ɜr/。
+      // 對小三來說這是例外，切成 ear-th 會教他唸成「eer-th」，所以整個記。
+      {w:"Earth",   pos:"n.", zh:"地球", emoji:"🌍", chunks:"", sight:true}
     ]}
   ]
 };

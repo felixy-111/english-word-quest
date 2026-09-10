@@ -111,6 +111,23 @@ header.bar .sp{flex:1;}
 .flowcard.dim{filter:grayscale(.5) brightness(.92);}
 .flowcard.now{box-shadow:0 0 0 3px var(--gold), 0 0 12px rgba(255,216,61,.6);}
 
+/* 老師模式。iPad 上 input 字級低於 16px 會被 Safari 自動放大整頁，一律 16px 起跳 */
+.twbox{text-align:left;}
+.twta{width:100%; min-height:150px; font-size:16px; line-height:1.6; padding:10px;
+  border:2px solid var(--wood-d); background:#fffdf6; font-family:inherit; box-sizing:border-box;}
+.twrow{display:flex; align-items:center; gap:8px; padding:8px; margin:6px 0;
+  background:#fffdf6; border:2px solid #d8c9a8; flex-wrap:wrap;}
+.twpic{width:44px; height:44px; flex:0 0 44px; display:flex; align-items:center;
+  justify-content:center; font-size:22px; background:#fff; border:1px solid #e3d8bd;}
+.twpic img{width:44px; height:44px; object-fit:contain;}
+.twen{font-size:19px; font-weight:900; min-width:90px; color:#3b2f22;}
+.twin{font-size:16px; padding:5px 7px; border:1px solid #c8b894; background:#fff; box-sizing:border-box;}
+.twin.zh{width:96px;} .twin.ck{width:104px;} .twin.pos{width:66px;}
+.twday{margin-left:auto; font-size:12px; font-weight:900; color:#6b5b3e;
+  background:#efe6cf; padding:3px 8px; white-space:nowrap;}
+.twhint{font-size:13px; color:#6b5b3e; line-height:1.7; margin:6px 0;}
+.twdate{font-size:16px; padding:6px 8px; border:2px solid var(--wood-d); background:#fffdf6;}
+
 .modeswitch{display:flex; gap:8px; margin-bottom:12px;}
 .modeswitch .btn{flex:1; font-size:16px;}
 .modeswitch .btn.dim{filter:grayscale(.55) brightness(.9);}
@@ -553,7 +570,7 @@ details.patbox:not([open]) > :not(summary){display:none !important;}
 <script>
 "use strict";
 const DATA = window.EN_WORDS || {units:[]};
-const APP_VER = "v7｜2026.09.06 任務與成就對齊三段式";
+const APP_VER = "v8｜2026.09.11 老師現場加字＋第一批真實單字";
 const LS_KEY = "ewq_state_v1";
 let store = loadStore();
 function loadStore(){ try{return JSON.parse(localStorage.getItem(LS_KEY))||{}}catch(e){return {}} }
@@ -579,7 +596,86 @@ store.flow  = store.flow  || null;  // 今天的 20 分鐘進度 {date, review:{
 let S = {uid:null, q:null};
 
 // ====== 單字索引 ======
-function allUnits(){ return DATA.units||[]; }
+// 老師現場加的字。⚠️ key 一定要跟 LS_KEY 分開 ——「清除全部紀錄」是
+// localStorage.removeItem(LS_KEY)，老師辛苦加的字不能跟著進度被小孩一起清掉。
+const TW_KEY = "ewq_words_v1";
+function loadTeacherUnits(){
+  try{ const v=JSON.parse(localStorage.getItem(TW_KEY)); return Array.isArray(v)?v:[]; }
+  catch(e){ return []; }
+}
+function saveTeacherUnits(units){ localStorage.setItem(TW_KEY, JSON.stringify(units)); }
+
+// 移植自 build_words.py 的 auto_chunks。刻意只切單音節 —— 多音節自動切很容易切錯，
+// 寧可留空讓老師自己填，也不要教錯（留空＝chunkState 的 "none"，什麼都不顯示）。
+function autoChunks(word){
+  const w=String(word||"").toLowerCase();
+  if(!/^[a-z]+$/.test(w)) return "";
+  if((w.match(/[aeiou]+/g)||[]).length!==1) return "";   // 母音群超過一個＝多音節，不猜
+  const i=w.search(/[aeiou]/);
+  if(i<=0) return "";                                    // 母音開頭（at、in）不切
+  return w.slice(0,i)+"-"+w.slice(i);
+}
+
+const POS_SET=["n.","v.","adj.","adv.","prep.","pron.","num.","aux."];
+// 解析規則刻意做成「順序無關」，現場打字才不會因為欄位順序錯就整行壞掉：
+//   第一個 token＝英文｜含 - 的＝音塊｜長得像詞性的＝詞性｜其餘串起來＝中文
+function parseWordLines(text){
+  return String(text||"").split(/\r?\n/).map(line=>{
+    const toks=line.split(/[\s,、\t]+/).filter(Boolean);
+    if(!toks.length) return null;
+    const w=toks.shift();
+    let pos="", chunks="", zh=[];
+    toks.forEach(t=>{
+      if(!pos && POS_SET.includes(t.toLowerCase())) pos=t.toLowerCase();
+      else if(!chunks && t.includes("-") && /^[a-z-]+$/i.test(t)) chunks=t.toLowerCase();
+      else zh.push(t);
+    });
+    return {w, zh:zh.join(""), pos:pos||"n.", chunks:chunks||autoChunks(w), emoji:"", img:""};
+  }).filter(Boolean);
+}
+
+// ── 日期：提案是週一到週五，所以排課要跳過週末 ──────────────────
+const WD_NAME=["星期日","星期一","星期二","星期三","星期四","星期五","星期六"];
+function dateAdd(key, n){
+  const [y,m,d]=key.split("-").map(Number);
+  return new Date(y, m-1, d+n).toLocaleDateString("en-CA");
+}
+function isWeekend(key){
+  const [y,m,d]=key.split("-").map(Number);
+  const w=new Date(y, m-1, d).getDay();
+  return w===0 || w===6;
+}
+function nextWeekday(key){ let k=key; let guard=0; while(isWeekend(k) && guard++<7) k=dateAdd(k,1); return k; }
+function unitLabel(key){
+  const [y,m,d]=key.split("-").map(Number);
+  return {title:`${m} / ${d}`, sub:WD_NAME[new Date(y, m-1, d).getDay()]};
+}
+
+// ARASAAC 圖庫（CC BY-NC-SA）。API 與圖片 CDN 都開 CORS，所以 iPad 上可以直接抓。
+// 存網址不存 data URI —— localStorage 塞 base64 很快就爆。
+async function fetchPic(word){
+  const w=String(word||"").toLowerCase().replace(/[^a-z]/g,"");
+  if(!w) return "";
+  try{
+    const r=await fetch(`https://api.arasaac.org/api/pictograms/en/bestsearch/${encodeURIComponent(w)}`);
+    if(!r.ok) return "";
+    const hits=await r.json();
+    if(!Array.isArray(hits) || !hits.length) return "";
+    const id=hits[0]._id;
+    return `https://static.arasaac.org/pictograms/${id}/${id}_300.png`;
+  }catch(e){ return ""; }
+}
+
+// 全 app 唯一的資料入口：內建單字 ＋ 老師加的，同一天就併進同一個單元。
+function allUnits(){
+  const base=(DATA.units||[]).map(u=>({...u, words:u.words.slice()}));
+  loadTeacherUnits().forEach(tu=>{
+    const hit=base.find(u=>u.id===tu.id);
+    if(hit) hit.words=hit.words.concat(tu.words.filter(w=>!hit.words.some(x=>x.w===w.w)));
+    else base.push({...tu, words:tu.words.slice()});
+  });
+  return base.sort((a,b)=> a.id<b.id ? -1 : a.id>b.id ? 1 : 0);
+}
 function unitById(id){ return allUnits().find(u=>u.id===id); }
 function keyOf(uid,w){ return uid+"|"+w; }
 function boxOf(uid,w){ return store.box[keyOf(uid,w)]||0; }
@@ -888,10 +984,22 @@ function wordOf(uid,w){ const u=unitById(uid); return u && u.words.find(x=>x.w==
 // 單字的圖：img/<單字>.png（ARASAAC 圖庫）。圖檔不在就自動退回 emoji，
 // 所以第一次開、離線、或新字還沒抓圖，都不會開天窗。
 // animate=true 才播微動效——抄寫單不播，小孩寫字時會分心。
+// 音塊有三種狀態，不能混為一談：
+//   sight   真的不規則（write / friend / said / Earth）→ ⭐ 要整個記
+//   chunks  有拆法 → 照著拆
+//   none    只是還沒填音塊 → 什麼都不要說
+// ⚠️ 舊版把 none 當成 sight，會把 paper / plastic 這種明明拼得出來的字教成整個背。
+//    自動切字只處理單音節（build_words.py 的 auto_chunks），多音節一律留空，
+//    所以「留空」在這個系統裡是常態，不是「這個字不規則」的訊號。
+function chunkState(w){ return w.sight ? "sight" : (w.chunks ? "chunks" : "none"); }
+const SIGHT_HTML = '<div class="sightbadge">⭐ 這個字拼不出來，要整個記起來</div>';
+
 function picHTML(w, cls, animate){
   const an = (animate && w.anim) ? " anim-"+w.anim : "";
+  // 老師現場加的字，圖是 ARASAAC 的完整網址；內建的字則在 img/ 底下
+  const src = w.img || ("img/" + encodeURIComponent(w.w) + ".png");
   return `<span class="${cls}${an}" data-w="${esc(w.w)}">`
-    + `<img src="img/${encodeURIComponent(w.w)}.png" alt="${esc(w.zh)}"`
+    + `<img src="${esc(src)}" alt="${esc(w.zh)}"`
     + ` data-fb="${esc(w.emoji||"🔤")}" onerror="this.replaceWith(this.dataset.fb)"></span>`;
 }
 function writeRec(uid){
@@ -923,13 +1031,13 @@ function viewWrite(uid){
       <div class="wmain">
         <div class="ww" data-w="${esc(w.w)}">${esc(w.w)}</div>
         <div class="wmeta"><span class="pos">${esc(w.pos||"")}${esc(POS_ZH[w.pos]||"")}</span>${esc(w.zh)}</div>
-        ${(w.sight||!w.chunks)?'<div class="wchunk sight">⭐ 這個字拼不出來，要整個記</div>'
-          :`<div class="wchunk">${esc(w.chunks)}</div>`}
+        ${chunkState(w)==="sight" ? '<div class="wchunk sight">⭐ 這個字拼不出來，要整個記</div>'
+          : chunkState(w)==="chunks" ? `<div class="wchunk">${esc(w.chunks)}</div>` : ""}
       </div>
       <button class="wbtn ${done?'on':''}">${done?'✅ 已寫':'寫好了'}</button>
     </div>`; }).join("");
   elView.innerHTML=`<div class="writehead block">
-      <div class="q-prompt" style="text-align:center">📝 ${esc(u.title)}　要寫的 5 個字</div>
+      <div class="q-prompt" style="text-align:center">📝 ${esc(u.title)}　要寫的 ${u.words.length} 個字</div>
       <div class="statline" style="text-align:center">全部都要寫 ‧ 每個字寫 5 次 ‧ 已完成 ${n}／${u.words.length}</div>
       <div class="wsteps">
         <div class="wstep s-look"><b>1</b>看著抄</div>
@@ -952,7 +1060,7 @@ function viewWrite(uid){
       rec.done[key]=1; saveStore(); sOk(); addXP(3); rewardPop("+3 XP"); dailyProgress("write");
       buddyReact('happy');
       if(writeDoneOf(u.id)>=u.words.length){ addCoins(10); confetti(); sWin();
-        toast("📝 今天的 5 個字都寫完了！　+10💰",""); }
+        toast(`📝 今天的 ${u.words.length} 個字都寫完了！　+10💰`,""); }
       viewWrite(u.id);
     };
   });
@@ -1310,11 +1418,10 @@ function renderLearn(){
     <div id="reveal" class="reveal-hide">
       <div class="q-prompt" style="margin-top:14px">② 換你唸唸看</div>
       ${picHTML(w,"learnpic",true)}
-      <div class="q-prompt">③ 看圖，把聲音跟畫面連起來　④ 看看它怎麼拆</div>
+      <div class="q-prompt">③ 看圖，把聲音跟畫面連起來${chunkState(w)==="none"?"":"　④ 看看它怎麼拆"}</div>
       <div class="word-big" id="wordBig">${esc(w.w)}</div>
-      ${(w.sight||!w.chunks)
-        ? '<div class="sightbadge">⭐ 這個字拼不出來，要整個記起來</div>'
-        : `<div class="chunks" id="chunks">${esc(w.chunks)}</div>`}
+      ${chunkState(w)==="sight" ? SIGHT_HTML
+        : chunkState(w)==="chunks" ? `<div class="chunks" id="chunks">${esc(w.chunks)}</div>` : ""}
       <div class="zh-big"><span class="pos">${esc(w.pos||"")}${esc(POS_ZH[w.pos]||"")}</span>${esc(w.zh)}</div>
       ${w.family?`<div class="fam">🏠 住在 <b>${esc(w.family)}</b> 這一家</div>`:""}
       ${w.sent?`<div class="sent">${esc(w.sent)}<div class="sentzh">${esc(w.sentZh||"")}</div></div>`:""}
@@ -1352,7 +1459,7 @@ function renderLearnDone(){
   unlock("first_learn"); confetti(); sWin();
   elView.innerHTML=`<div class="card block">
     <div class="q-prompt">📖 前四步走完了！</div>
-    <div class="statline">最後一步是「寫」——去把這 5 個字寫進練習本</div>
+    <div class="statline">最後一步是「寫」——去把這 ${L.list.length} 個字寫進練習本</div>
     <div class="navrow">
       <button class="btn btn-gold" id="toWrite">📝 去寫這 5 個字</button>
       <button class="btn btn-stone" id="back">← 回單元</button>
@@ -1372,11 +1479,11 @@ const RC = {
   review: { crumb:"複習昨天的字", head:"① 複習昨天的 5 個字",
             ask:"你記得英文怎麼寫嗎？", tip:"先在心裡想一次，再翻答案",
             yes:"記得了 ✅", no:"還不會 🤔",
-            doneHead:"昨天的字複習完了！", missHead:"這幾個字今天寫的時候先練：" },
+            doneHead:n=>"昨天的字複習完了！", missHead:"這幾個字今天寫的時候先練：" },
   dict:   { crumb:"蓋起來默寫", head:"③ 蓋起來默寫",
             ask:"在練習本上寫寫看", tip:"寫完英文、詞性、中文，再翻答案對一對",
             yes:"寫對了 ✅", no:"寫錯了 ✏️",
-            doneHead:"今天的 5 個字默寫完了！", missHead:"把這幾個字圈起來，明天先練：" }
+            doneHead:n=>`今天的 ${n} 個字默寫完了！`, missHead:"把這幾個字圈起來，明天先練：" }
 };
 
 // 今天之前最近一個「動過筆」的單元。第一天沒有前一單元時回 null。
@@ -1420,9 +1527,8 @@ function renderRecall(){
     <div class="zh-big rc-zh"><span class="pos">${esc(w.pos||"")}${esc(POS_ZH[w.pos]||"")}</span>${esc(w.zh)}</div>
     ${R.shown ? `
       <div class="word-big" id="wordBig">${esc(w.w)}</div>
-      ${(w.sight||!w.chunks)
-        ? '<div class="sightbadge">⭐ 這個字拼不出來，要整個記起來</div>'
-        : `<div class="chunks" id="chunks">${esc(w.chunks)}</div>`}
+      ${chunkState(w)==="sight" ? SIGHT_HTML
+        : chunkState(w)==="chunks" ? `<div class="chunks" id="chunks">${esc(w.chunks)}</div>` : ""}
       <div class="navrow">
         <button class="btn btn-grass" id="yes">${T.yes}</button>
         <button class="btn btn-red"   id="no">${T.no}</button>
@@ -1489,7 +1595,7 @@ function renderRecallDone(){
     ? '<button class="btn btn-gold" id="next">② 學今天的 5 個新字 →</button>'
     : '<button class="btn btn-gold" id="next">🏠 今天的 20 分鐘完成了</button>';
   elView.innerHTML=`<div class="card block">
-    <div class="q-prompt">${T.doneHead}</div>
+    <div class="q-prompt">${T.doneHead(n)}</div>
     <div class="word-big">${R.ok} ／ ${n}</div>
     <div class="statline">${all?"全部都記得，很厲害 💎":"沒關係，記不起來的字才是要練的字"}</div>
     ${miss}
@@ -1612,11 +1718,10 @@ function renderFix(item){
   elView.innerHTML=`<div class="card block fixcard">
     <div class="q-prompt">📦 這個字進你的單字寶箱了</div>
     <div class="word-big" id="fw">${esc(w.w)}</div>
-    ${(w.sight||!w.chunks)
-      ? '<div class="sightbadge">⭐ 這個字拼不出來，要整個記起來</div>'
-      : `<div class="chunks" id="fc">${esc(w.chunks)}</div>`}
+    ${chunkState(w)==="sight" ? SIGHT_HTML
+      : chunkState(w)==="chunks" ? `<div class="chunks" id="fc">${esc(w.chunks)}</div>` : ""}
     <div class="zh-big">${esc(w.zh)}</div>
-    <div class="fixhint">點上面的字可以再聽一次${(w.sight||!w.chunks)?"":"，點下面那行會一塊一塊唸給你聽"}</div>
+    <div class="fixhint">點上面的字可以再聽一次${chunkState(w)==="chunks"?"，點下面那行會一塊一塊唸給你聽":""}</div>
     <div class="navrow"><button class="btn btn-grass" id="go">知道了 ✅</button></div></div>`;
   speak(w.w);
   document.getElementById("fw").onclick=()=>{ sClick(); speak(w.w); };
@@ -1670,15 +1775,141 @@ function viewStats(){
     <div class="field full"><div class="lab">📚 各單元</div>${units}</div>
     <div class="field full"><div class="lab">📦 單字寶箱（錯過的字，點可唸音）</div><div class="chips">${weakHTML}</div></div>
     <div class="field full"><div class="lab">🏅 成就</div>${achv}</div>
+    <div class="navrow" style="margin-top:14px">
+      <button class="btn btn-wood" id="teach">👩‍🏫 老師：加單字</button></div>
     <div class="navrow"><button class="btn btn-stone" id="home">🏠 回首頁</button>
       <button class="btn btn-red" id="reset">清除全部紀錄</button></div>
     <div class="hint">版本 ${APP_VER}</div></div>`;
   elView.querySelectorAll(".wchip").forEach(b=>b.onclick=()=>{ sClick(); speak(b.dataset.w); });
   document.getElementById("home").onclick=()=>{ sClick(); viewHome(); };
+  document.getElementById("teach").onclick=()=>{ sClick(); viewTeacher(); };
   document.getElementById("reset").onclick=()=>{
     if(!confirm("確定要把所有進度（等級、金幣、單字寶箱）清掉嗎？這個動作沒辦法復原。")) return;
     localStorage.removeItem(LS_KEY); location.reload();
   };
+}
+
+// ====== 老師模式：現場加單字 ======
+// 為什麼要有這個：家長給的單字不夠一週（提案是週一到週五每天 5 字＝25 個），
+// 太一上課看到安親班課本要能當場補字，而且當場就要能教，不能等回家跑腳本。
+// 加的字存在 TW_KEY，跟進度分開，「清除全部紀錄」不會把它清掉。
+function viewTeacher(){
+  crumb("老師：加單字");
+  S.tw = S.tw || {start:nextWeekday(todayKey()), rows:[]};
+  const T=S.tw;
+  const rowsHTML = T.rows.map((r,i)=>`
+    <div class="twrow" data-i="${i}">
+      <span class="twpic">${r.img?`<img src="${esc(r.img)}" alt="">`:(r.emoji||"🔤")}</span>
+      <span class="twen">${esc(r.w)}</span>
+      <input class="twin zh"  data-k="zh"     value="${esc(r.zh)}"     placeholder="中文">
+      <input class="twin pos" data-k="pos"    value="${esc(r.pos)}"    placeholder="詞性">
+      <input class="twin ck"  data-k="chunks" value="${esc(r.chunks)}" placeholder="音塊 pa-per">
+      <span class="twday">${esc(r.day||"")}</span>
+    </div>`).join("");
+
+  elView.innerHTML=`<div class="card block twbox">
+    <div class="q-prompt">👩‍🏫 老師：加單字</div>
+    <div class="twhint">一行一個字，最少「<b>英文 中文</b>」。要更精確可以加詞性和音塊，順序不拘：<br>
+      <code>paper 紙 n. pa-per</code><br>
+      每 <b>5 個字排一天</b>，自動跳過週末。音塊留空不會怎樣，只是那個字不教怎麼拆。</div>
+    <div style="margin:10px 0">從哪一天開始：
+      <input type="date" class="twdate" id="twStart" value="${esc(T.start)}"></div>
+    <textarea class="twta" id="twText" placeholder="plant 植物&#10;paper 紙 n. pa-per&#10;recycle 回收 v.">${esc(T.raw||"")}</textarea>
+    <div class="navrow" style="margin-top:10px">
+      <button class="btn btn-grass" id="twParse">解析看看 🔍</button>
+      <button class="btn btn-stone" id="twBack">← 回進度頁</button>
+    </div>
+    ${T.rows.length?`
+      <div class="lab" style="margin-top:14px">解析結果（可以直接改，改完再存）</div>
+      ${rowsHTML}
+      <div class="navrow" style="margin-top:12px">
+        <button class="btn btn-gold" id="twSave">存進 App（${T.rows.length} 個字）</button>
+        <button class="btn btn-diamond" id="twExport">匯出給老師 📋</button>
+      </div>`:""}
+    ${T.exported?`
+      <div class="lab" style="margin-top:14px">貼給老師，灌進 data/words.js</div>
+      <textarea class="twta" id="twOut" readonly>${esc(T.exported)}</textarea>
+      <div class="navrow"><button class="btn btn-wood" id="twCopy">複製</button></div>`:""}
+    <div class="twhint" style="margin-top:14px">已經加過 <b>${loadTeacherUnits().reduce((a,u)=>a+u.words.length,0)}</b> 個字。
+      這些字存在這台裝置上，「清除全部紀錄」不會清掉它們。</div>
+    <div class="navrow"><button class="btn btn-red" id="twClear">清掉我加過的所有單字</button></div>
+  </div>`;
+
+  document.getElementById("twStart").onchange=e=>{
+    T.raw=document.getElementById("twText").value;   // 不先收起來，重繪會把老師打好的字洗掉
+    T.start=e.target.value||T.start; assignDays(); viewTeacher();
+  };
+  document.getElementById("twBack").onclick=()=>{ sClick(); viewStats(); };
+  document.getElementById("twParse").onclick=async()=>{
+    sPlace();
+    T.start=document.getElementById("twStart").value||T.start;
+    T.raw=document.getElementById("twText").value;
+    T.rows=parseWordLines(T.raw);
+    T.exported="";
+    assignDays();
+    viewTeacher();
+    // 圖一張一張抓，抓到一張畫一張，不要讓老師等全部抓完
+    for(let i=0;i<T.rows.length;i++){
+      const url=await fetchPic(T.rows[i].w);
+      if(!url) continue;
+      T.rows[i].img=url;
+      const cell=elView.querySelector(`.twrow[data-i="${i}"] .twpic`);
+      if(cell) cell.innerHTML=`<img src="${url}" alt="">`;
+    }
+  };
+  elView.querySelectorAll(".twrow").forEach(row=>{
+    const i=+row.dataset.i;
+    row.querySelectorAll(".twin").forEach(inp=>{
+      inp.oninput=()=>{ T.rows[i][inp.dataset.k]=inp.value.trim(); };
+    });
+  });
+  const bs=document.getElementById("twSave");
+  if(bs) bs.onclick=()=>{ sOk(); saveRows(); toast("存好了，回首頁就看得到 ✅",""); viewTeacher(); };
+  const be=document.getElementById("twExport");
+  if(be) be.onclick=()=>{ sClick(); T.exported=exportRows(); viewTeacher(); };
+  const bc=document.getElementById("twCopy");
+  if(bc) bc.onclick=()=>{ const ta=document.getElementById("twOut");
+    ta.select(); ta.setSelectionRange(0,999999);
+    try{ document.execCommand("copy"); toast("複製好了 📋",""); }catch(e){ toast("請長按選取複製",""); } };
+  document.getElementById("twClear").onclick=()=>{
+    if(!confirm("確定要把你加過的所有單字都刪掉嗎？（小孩的進度不受影響）")) return;
+    localStorage.removeItem(TW_KEY); S.tw=null; viewTeacher();
+  };
+
+  // 每 5 個字排一天，跳過週末
+  function assignDays(){
+    let day=nextWeekday(T.start);
+    T.rows.forEach((r,i)=>{
+      if(i>0 && i%5===0) day=nextWeekday(dateAdd(day,1));
+      r.uid=day; r.day=unitLabel(day).title;
+    });
+  }
+  function groupByDay(){
+    const map={};
+    T.rows.forEach(r=>{ (map[r.uid]=map[r.uid]||[]).push(r); });
+    return Object.keys(map).sort().map(uid=>({
+      id:uid, ...unitLabel(uid),
+      words:map[uid].map(r=>({w:r.w, pos:r.pos||"n.", zh:r.zh, emoji:r.emoji||"",
+                              chunks:r.chunks||"", img:r.img||""}))
+    }));
+  }
+  function saveRows(){
+    const cur=loadTeacherUnits();
+    groupByDay().forEach(nu=>{
+      const hit=cur.find(u=>u.id===nu.id);
+      if(hit) hit.words=hit.words.filter(w=>!nu.words.some(x=>x.w===w.w)).concat(nu.words);
+      else cur.push(nu);
+    });
+    saveTeacherUnits(cur);
+  }
+  function exportRows(){
+    return groupByDay().map(u=>
+      `    { id:"${u.id}", title:"${u.title}", sub:"${u.sub}", words:[\n` +
+      u.words.map(w=>`      {w:${JSON.stringify(w.w)}, pos:${JSON.stringify(w.pos)}, `
+        + `zh:${JSON.stringify(w.zh)}, chunks:${JSON.stringify(w.chunks)}`
+        + (w.img?`, img:${JSON.stringify(w.img)}`:"") + `}`).join(",\n") +
+      `\n    ]},`).join("\n");
+  }
 }
 
 // ====== 怎麼玩 ======
