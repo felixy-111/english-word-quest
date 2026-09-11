@@ -576,7 +576,7 @@ details.patbox:not([open]) > :not(summary){display:none !important;}
 <script>
 "use strict";
 const DATA = window.EN_WORDS || {units:[]};
-const APP_VER = "v9｜2026.09.12 上課模式＋考試成績＋已完成分區";
+const APP_VER = "v9.1｜2026.09.12 週末只考該週新字";
 const LS_KEY = "ewq_state_v1";
 let store = loadStore();
 function loadStore(){ try{return JSON.parse(localStorage.getItem(LS_KEY))||{}}catch(e){return {}} }
@@ -663,6 +663,11 @@ function isWeekend(key){
   return w===0 || w===6;
 }
 function nextWeekday(key){ let k=key; let guard=0; while(isWeekend(k) && guard++<7) k=dateAdd(k,1); return k; }
+function weekStart(key){                       // 該日期所在那一週的星期一
+  const [y,m,d]=key.split("-").map(Number);
+  const wd=(new Date(y, m-1, d).getDay()+6)%7; // 週一=0
+  return dateAdd(key, -wd);
+}
 function unitLabel(key){
   const [y,m,d]=key.split("-").map(Number);
   return {title:`${m} / ${d}`, sub:WD_NAME[new Date(y, m-1, d).getDay()]};
@@ -1855,12 +1860,17 @@ function viewStats(){
 // ====== 上課模式：太一帶學生大量練習 ＋ 考試留成績 ======
 // 分工：平日在家用紙本學新字（五步驟），週末上課用這裡大量複習舊字並考試。
 // 所以這裡出題是「跨單元、按範圍」，不是每日流程那種「今天這 5 個」。
-function classPool(kind, days){
-  const today=todayKey();
+// 太一定的規則：
+//   週一～五 → 在家複習「單字庫」（累積的舊字）
+//   週六日上課 → 只練「該週的新字」，不碰單字庫，而且不限數量、要全部考
+function classPool(kind){
+  const today=todayKey(), ws=weekStart(today);
   let pairs=allPairs().filter(p=>p.uid<=today);        // 還沒到的日期不出題
-  if(kind==="recent"){
-    const from=dateAdd(today, -days);
-    pairs=pairs.filter(p=>p.uid>=from);
+  if(kind==="thisweek"){
+    pairs=pairs.filter(p=>p.uid>=ws);
+  } else if(kind==="lastweek"){
+    const lws=dateAdd(ws,-7);
+    pairs=pairs.filter(p=>p.uid>=lws && p.uid<ws);
   } else if(kind==="weak"){
     pairs=pairs.filter(p=>boxOf(p.uid,p.w.w)<3);        // 還沒精通的
   } else if(kind==="box"){
@@ -1870,16 +1880,16 @@ function classPool(kind, days){
   return shuffle(pairs).sort((a,b)=>boxOf(a.uid,a.w.w)-boxOf(b.uid,b.w.w));
 }
 const CLASS_SCOPES=[
-  {k:"recent", d:7,  ic:"🗓️", nm:"最近 7 天的字",   ds:"上週學的，考前複習用"},
-  {k:"recent", d:30, ic:"📅", nm:"最近一個月的字", ds:"範圍大一點的總複習"},
-  {k:"weak",   d:0,  ic:"🎯", nm:"還沒精通的字",   ds:"答對三次才算精通，沒到的全抓出來"},
-  {k:"box",    d:0,  ic:"📦", nm:"錯過的字",       ds:"只練單字寶箱裡的"},
+  {k:"thisweek", ic:"⭐", nm:"這一週的新字",       ds:"週末上課用這個。這週紙本寫過的字，全部考一次"},
+  {k:"lastweek", ic:"↩️", nm:"上一週的新字",       ds:"補課或跨週時用"},
+  {k:"weak",     ic:"🎯", nm:"單字庫｜還沒精通",   ds:"平日複習用。答對三次才算精通"},
+  {k:"box",      ic:"📦", nm:"單字庫｜錯過的字",   ds:"平日複習用。只練單字寶箱裡的"},
 ];
 function viewClass(){
   crumb("上課模式");
-  S.cls = S.cls || {si:0, size:15, mode:"recall"};
+  S.cls = S.cls || {si:0, size:999, mode:"recall"};   // 預設＝這一週的新字、全部考
   const C=S.cls;
-  const counts=CLASS_SCOPES.map(sc=>classPool(sc.k, sc.d).length);
+  const counts=CLASS_SCOPES.map(sc=>classPool(sc.k).length);
   const scopeHTML=CLASS_SCOPES.map((sc,i)=>`
     <button class="btn ${i===C.si?'btn-grass':'btn-stone'} clsopt" data-i="${i}" style="width:100%;margin-bottom:7px;text-align:left">
       ${sc.ic} ${sc.nm}　<span style="opacity:.85;font-size:13px">${counts[i]} 個字</span>
@@ -1892,9 +1902,9 @@ function viewClass(){
     <div class="statline" style="text-align:center">帶學生大量複習，跑完會留一筆成績</div>
     <div class="lab" style="margin-top:12px">① 考哪些字</div>
     ${scopeHTML}
-    <div class="lab" style="margin-top:12px">② 考幾個</div>
+    <div class="lab" style="margin-top:12px">② 考幾個（週末上課用「全部」）</div>
     <div style="display:flex;gap:7px">
-      ${[10,15,25,999].map(v=>`<button class="btn ${v===C.size?'btn-gold':'btn-stone'} clssize" data-v="${v}" style="flex:1">${v===999?'全部':v}</button>`).join("")}
+      ${[999,10,15,25].map(v=>`<button class="btn ${v===C.size?'btn-gold':'btn-stone'} clssize" data-v="${v}" style="flex:1">${v===999?'全部':v}</button>`).join("")}
     </div>
     <div class="lab" style="margin-top:12px">③ 怎麼考</div>
     <div style="display:flex;gap:7px">
@@ -1919,7 +1929,7 @@ function viewClass(){
   document.getElementById("clsGo").onclick=()=>{
     sPlace();
     const sc=CLASS_SCOPES[C.si];
-    const list=classPool(sc.k, sc.d).slice(0, C.size);
+    const list=classPool(sc.k).slice(0, C.size);
     if(!list.length){ toast("這個範圍還沒有字 🙂",""); return; }
     if(C.mode==="spell") startExamQuiz(list, sc.nm);
     else startExamRecall(list, sc.nm);
