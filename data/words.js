@@ -18,10 +18,10 @@
 // 老師上課現場加的字走 App 裡的「👩‍🏫 老師：加單字」，存在裝置的 localStorage，
 // 匯出後再灌進這個檔才會跟著上線給孩子。
 window.EN_WORDS = {
-  version: "cs3-2026-09-14",
+  version: "cs3-2026-09-12",
   units: [
     // 來源：安親班 CS3（9/7，Lily 老師）指定的拼字考單字。主題 Save the Earth。
-    { id:"2026-09-14", title:"9 / 14", sub:"星期一", words:[
+    { id:"2026-09-12", title:"9 / 12", sub:"星期六", words:[
       // 這課的作業是 Write 6 ways to save the earth，「plant trees（種樹）」是標準答案，
       // 所以用動詞「種植」而不是名詞「植物」——ARASAAC 抓到的圖也正是動手種下去那張。
       {w:"plant",   pos:"v.", zh:"種植", emoji:"🌱", chunks:"pl-ant"},
