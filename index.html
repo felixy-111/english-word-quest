@@ -576,7 +576,7 @@ details.patbox:not([open]) > :not(summary){display:none !important;}
 <script>
 "use strict";
 const DATA = window.EN_WORDS || {units:[]};
-const APP_VER = "v9.1｜2026.09.12 週末只考該週新字";
+const APP_VER = "v10｜2026.09.12 紙本學新字／App複習舊字＋備份還原";
 const LS_KEY = "ewq_state_v1";
 let store = loadStore();
 function loadStore(){ try{return JSON.parse(localStorage.getItem(LS_KEY))||{}}catch(e){return {}} }
@@ -598,6 +598,27 @@ store.daily = store.daily || null;
 store.gear  = store.gear  || {owned:{}, equipped:{}};  // buddySVG 需要（商店為第二階段）
 store.write = store.write || null;  // 今日抄寫單 {date, list:[{uid,w}], done:{}}
 store.flow  = store.flow  || null;  // 今天的 20 分鐘進度 {date, review:{ok,n}, dict:{ok,n}}
+
+// 把舊的 "日期|單字" key 併成 "單字" key。同一個字出現在多個日期時，
+// 盒號取最高的、錯誤次數相加——寧可高估他學會的程度，也不要把練過的紀錄丟掉。
+function migrateKeys(){
+  if(store.keyv===2) return;
+  const conv=(obj, merge)=>{
+    const out={};
+    Object.keys(obj||{}).forEach(k=>{
+      const i=k.indexOf("|");
+      const w=(i>=0 ? k.slice(i+1) : k).toLowerCase();
+      out[w] = (w in out) ? merge(out[w], obj[k]) : obj[k];
+    });
+    return out;
+  };
+  store.box   = conv(store.box,   (a,b)=>Math.max(a,b));
+  store.wrong = conv(store.wrong, (a,b)=>(a|0)+(b|0));
+  store.seen  = conv(store.seen,  (a,b)=>Math.max(a,b));
+  store.keyv  = 2;
+  saveStore();
+}
+migrateKeys();
 
 let S = {uid:null, q:null};
 
@@ -699,7 +720,12 @@ function allUnits(){
   return base.sort((a,b)=> a.id<b.id ? -1 : a.id>b.id ? 1 : 0);
 }
 function unitById(id){ return allUnits().find(u=>u.id===id); }
-function keyOf(uid,w){ return uid+"|"+w; }
+// ⚠️ 進度的 key 只認「單字本身」，不認日期。
+// 舊版是 "日期|單字"，結果只要把某個字換到別的日期（改課表、重排單元、重灌 words.js），
+// 那個字的 Leitner 盒號和錯誤次數就整個對不上，等於被清掉——而且不會有任何錯誤訊息。
+// 字是同一個字，學會了就是學會了，跟它被排在哪一天無關。
+// uid 參數留著是為了不動十幾處呼叫端，實際沒有用到。
+function keyOf(uid, w){ return String(w).toLowerCase(); }
 function boxOf(uid,w){ return store.box[keyOf(uid,w)]||0; }
 // 「學過」＝跑過學新字，或已經在闖關裡答對過（兩條路都算數，統計才不會互相打架）
 function isSeen(uid,w){ const k=keyOf(uid,w); return !!store.seen[k] || (store.box[k]||0)>0; }
@@ -901,10 +927,10 @@ function renderHUD(){
 }
 function flashHUD(){ const el=document.querySelector("#topxp .xpbar"); if(!el) return;
   el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash"); }
+// 對應首頁三格。App 平日不教新字（那是紙本的事），所以沒有「學新字」這一項。
 const DAILY_DEFS=[
-  {id:"review", target:1, ic:"①", label:"複習昨天的 5 個字"},
-  {id:"seen",   target:5, ic:"📖", label:"學今天的 5 個新字"},
-  {id:"write",  target:5, ic:"📝", label:"5 個字寫進練習本"},
+  {id:"review", target:1, ic:"①", label:"複習單字庫的舊字"},
+  {id:"write",  target:5, ic:"②", label:"5 個字寫進練習本"},
   {id:"dict",   target:1, ic:"③", label:"蓋起來默寫"},
 ];
 function dailyProgress(id, n){ resetDaily(); const d=store.daily, def=DAILY_DEFS.find(x=>x.id===id); if(!def) return;
@@ -969,12 +995,13 @@ function viewHome(){
        <div class="fbody"><div class="ftitle">${title}</div><div class="fsub">${sub}</div></div>
        <div class="fmin">${min}</div></div>`;
   const doneTitle=(rec, fallback)=>{ const u=rec&&rec.uid&&unitById(rec.uid); return u?u.title:fallback; };
-  const s1 = pu
-    ? cardHTML(1, f.review?"done":"now", "複習昨天的 5 個字",
-        f.review ? `${doneTitle(f.review, pu.title)} ‧ 記得 ${f.review.ok}／${f.review.n}` : `${pu.title} 的字，蓋起來想想看`, "3 分鐘")
-    : cardHTML(1, "dim", "複習昨天的 5 個字", "今天是第一天，直接從 ② 開始", "3 分鐘");
-  const s2 = cardHTML(2, step2Done?"done":(pu&&!f.review?"":"now"), "今天的 5 個新字",
-        `${tu.title} ‧ 聽→說→看→拆→寫 ‧ 寫好 ${wDone}／${wAll}`, "15 分鐘");
+  const bank=dailyReviewPool();
+  const s1 = (bank.length || f.review)
+    ? cardHTML(1, f.review?"done":"now", "複習單字庫的舊字",
+        f.review ? `記得 ${f.review.ok}／${f.review.n}` : `以前學過的字，蓋起來想想看（${bank.length} 個）`, "3 分鐘")
+    : cardHTML(1, "dim", "複習單字庫的舊字", "單字庫還沒有舊字，直接從 ② 開始", "3 分鐘");
+  const s2 = cardHTML(2, step2Done?"done":((bank.length&&!f.review)?"":"now"), "今天紙本要寫的 5 個字",
+        `${tu.title} ‧ 對照著抄進練習本 ‧ 寫好 ${wDone}／${wAll}`, "15 分鐘");
   const s3 = cardHTML(3, f.dict?"done":(step2Done?"now":"dim"), "蓋起來默寫",
         f.dict ? `${doneTitle(f.dict, tu.title)} ‧ 對了 ${f.dict.ok}／${f.dict.n}` : (step2Done?"看中文，把 5 個字寫在練習本上":"建議先做完 ②"), "2 分鐘");
 
@@ -998,8 +1025,8 @@ function viewHome(){
   elView.querySelectorAll(".flowcard").forEach(c=>c.onclick=()=>{
     sPlace();
     const n=c.dataset.step;
-    if(n==="1"){ if(!pu) return toast("今天是第一天，還沒有昨天的字 🙂",""); startRecall(pu.id,"review"); }
-    else if(n==="2"){ S.uid=tu.id; viewUnit(); }
+    if(n==="1"){ startBankReview(dailyReviewPool()); }
+    else if(n==="2"){ S.uid=tu.id; viewWrite(tu.id); }   // App 不教新字，直接開抄寫單當對照表
     else { startRecall(tu.id,"dict"); }
   });
   // 單元 id 是日期字串（"2026-09-04"），不能用 + 轉數字，會變成 NaN
@@ -1513,10 +1540,11 @@ function renderLearnDone(){
 // 為什麼是自評而不是自動判分：家長提案講的就是「在練習本上默寫」，
 // 字寫在紙上，App 只負責出題、翻答案、記錄哪幾個字要明天先練。
 const RC = {
-  review: { crumb:"複習昨天的字", head:"① 複習昨天的 5 個字",
+  // ① 現在抽的是「單字庫」的舊字（以前學過的），不是昨天那五個
+  review: { crumb:"複習舊字", head:"① 複習單字庫的舊字",
             ask:"你記得英文怎麼寫嗎？", tip:"先在心裡想一次，再翻答案",
             yes:"記得了 ✅", no:"還不會 🤔",
-            doneHead:n=>"昨天的字複習完了！", missHead:"這幾個字今天寫的時候先練：" },
+            doneHead:n=>`舊字複習完了！`, missHead:"這幾個字還沒記得，之後會再出現：" },
   dict:   { crumb:"蓋起來默寫", head:"③ 蓋起來默寫",
             ask:"在練習本上寫寫看", tip:"寫完英文、詞性、中文，再翻答案對一對",
             yes:"寫對了 ✅", no:"寫錯了 ✏️",
@@ -1554,6 +1582,24 @@ function startRecall(uid, mode){
   renderRecall();
 }
 // 上課模式的考試：題目直接給 {uid,w} 陣列，跑完會留一筆成績
+// 平日 ① 的題目：從單字庫（過去日期的單元）抽，不含今天的新字。
+// 今天的新字是紙本的事，App 平日只負責舊字的保留。
+const DAILY_REVIEW_N = 8;   // 複習比學習快，所以比「一天 5 個新字」多抓幾個
+function dailyReviewPool(n){
+  const today=todayKey();
+  const pairs=allPairs().filter(p=>p.uid<today && boxOf(p.uid,p.w.w)<3);
+  // 盒號小的先出，同盒號裡錯得多的先出
+  return shuffle(pairs).sort((a,b)=>{
+    const d=boxOf(a.uid,a.w.w)-boxOf(b.uid,b.w.w); if(d) return d;
+    return (store.wrong[keyOf(b.uid,b.w.w)]||0)-(store.wrong[keyOf(a.uid,a.w.w)]||0);
+  }).slice(0, n||DAILY_REVIEW_N);
+}
+// 跟考試不同：這個會記進每日流程（flowRec），因為它就是三段式的第 ① 格
+function startBankReview(list){
+  if(!list.length){ toast("單字庫還沒有舊字可以複習 🙂",""); return; }
+  S.rc={uid:null, mode:"review", list:list.slice(), idx:0, ok:0, missed:[], shown:false};
+  renderRecall();
+}
 function startExamRecall(list, scope){
   if(!list.length){ toast("這個範圍還沒有字 🙂",""); return; }
   S.rc={uid:null, mode:"dict", list:shuffle(list.slice()), idx:0, ok:0, missed:[], shown:false,
@@ -1646,7 +1692,7 @@ function renderRecallDone(){
         `<b style="display:inline-block;margin:2px 8px 2px 0">${esc(m.w.w)}</b><span style="opacity:.75">${esc(m.w.zh)}</span>`
       ).join("　")}</div></div>` : "";
   const nextBtn = R.mode==="review"
-    ? '<button class="btn btn-gold" id="next">② 學今天的 5 個新字 →</button>'
+    ? '<button class="btn btn-gold" id="next">② 去寫今天的 5 個字 →</button>'
     : '<button class="btn btn-gold" id="next">🏠 今天的 20 分鐘完成了</button>';
   elView.innerHTML=`<div class="card block">
     <div class="q-prompt">${T.doneHead(n)}</div>
@@ -1659,7 +1705,7 @@ function renderRecallDone(){
     </div></div>`;
   document.getElementById("next").onclick=()=>{
     sPlace();
-    if(R.mode==="review"){ S.uid=todayUnit().id; S.rc=null; startLearn(); }
+    if(R.mode==="review"){ const t=todayUnit(); S.uid=t.id; S.rc=null; viewWrite(t.id); }
     else { S.rc=null; viewHome(); }
   };
   document.getElementById("home").onclick=()=>{ sClick(); S.rc=null; viewHome(); };
@@ -1852,7 +1898,7 @@ function viewStats(){
   document.getElementById("home").onclick=()=>{ sClick(); viewHome(); };
   document.getElementById("teach").onclick=()=>{ sClick(); viewTeacher(); };
   document.getElementById("reset").onclick=()=>{
-    if(!confirm("確定要把所有進度（等級、金幣、單字寶箱）清掉嗎？這個動作沒辦法復原。")) return;
+    if(!confirm("確定要把所有進度（等級、金幣、單字寶箱）清掉嗎？\n\n沒辦法復原。如果還沒備份，先去「老師：加單字 → 備份／還原」做一份。")) return;
     localStorage.removeItem(LS_KEY); location.reload();
   };
 }
@@ -1982,6 +2028,61 @@ function viewExamLog(){
   };
 }
 
+// ====== 備份／還原 ======
+// 為什麼需要：localStorage 只存在這一台裝置的這一個瀏覽器。
+// 改版本身不會清掉它，但這些情況會：換裝置、清瀏覽器資料、無痕視窗、
+// 小孩誤按「清除全部紀錄」。備份是唯一救得回來的方法。
+const BACKUP_KEYS=[LS_KEY, TW_KEY, EX_KEY];
+function makeBackup(){
+  const o={app:"english-word-quest", ver:APP_VER, at:new Date().toISOString()};
+  BACKUP_KEYS.forEach(k=>{ const v=localStorage.getItem(k); if(v!=null) o[k]=v; });
+  return JSON.stringify(o);
+}
+function restoreBackup(text){
+  let o; try{ o=JSON.parse(text); }catch(e){ return "讀不懂這段文字，確認是完整複製的嗎？"; }
+  if(!o || o.app!=="english-word-quest") return "這不是單字大冒險的備份。";
+  const hit=BACKUP_KEYS.filter(k=>typeof o[k]==="string");
+  if(!hit.length) return "這份備份是空的。";
+  hit.forEach(k=>localStorage.setItem(k, o[k]));
+  return "";
+}
+function viewBackup(){
+  crumb("備份／還原");
+  S.bk = S.bk || {};
+  elView.innerHTML=`<div class="card block" style="text-align:left">
+    <div class="q-prompt" style="text-align:center">💾 備份／還原</div>
+    <div class="twhint">進度存在<b>這台裝置的這個瀏覽器</b>裡。改版不會清掉它，但
+      <b>換裝置、清瀏覽器資料、無痕視窗、誤按「清除全部紀錄」</b>都會。
+      每次上完課備份一次最保險。</div>
+    <div class="lab" style="margin-top:12px">① 備份：按一下，把整段文字複製走</div>
+    <div class="navrow"><button class="btn btn-grass" id="bkMake" style="width:100%">產生備份</button></div>
+    ${S.bk.out?`<textarea class="twta" id="bkOut" readonly style="min-height:110px">${esc(S.bk.out)}</textarea>
+      <div class="navrow"><button class="btn btn-wood" id="bkCopy">複製</button></div>`:""}
+    <div class="lab" style="margin-top:14px">② 還原：把備份貼進來</div>
+    <textarea class="twta" id="bkIn" style="min-height:110px" placeholder="貼上之前備份的那一整段"></textarea>
+    <div class="navrow"><button class="btn btn-red" id="bkRestore" style="width:100%">用這份備份覆蓋現在的紀錄</button></div>
+    <div class="twhint" style="margin-top:10px">現在裝置上有：
+      進度 ${localStorage.getItem(LS_KEY)?"有":"無"} ‧
+      老師加的字 ${loadTeacherUnits().reduce((a,u)=>a+u.words.length,0)} 個 ‧
+      上課紀錄 ${loadExams().length} 筆</div>
+    <div class="navrow"><button class="btn btn-stone" id="bkBack">← 回老師模式</button></div>
+  </div>`;
+  document.getElementById("bkMake").onclick=()=>{ sOk(); S.bk.out=makeBackup(); viewBackup(); };
+  document.getElementById("bkBack").onclick=()=>{ sClick(); viewTeacher(); };
+  const c=document.getElementById("bkCopy");
+  if(c) c.onclick=()=>{ const t=document.getElementById("bkOut");
+    t.select(); t.setSelectionRange(0,999999);
+    try{ document.execCommand("copy"); toast("複製好了 📋",""); }catch(e){ toast("請長按選取複製",""); } };
+  document.getElementById("bkRestore").onclick=()=>{
+    const txt=document.getElementById("bkIn").value.trim();
+    if(!txt) return toast("先把備份貼進來","");
+    if(!confirm("這會用備份覆蓋掉現在裝置上的所有紀錄，確定嗎？")) return;
+    const err=restoreBackup(txt);
+    if(err) return toast("❌ "+err,"");
+    toast("✅ 還原好了，重新整理中…",""); setTimeout(()=>location.reload(), 800);
+  };
+}
+
 // ====== 老師模式：現場加單字 ======
 // 為什麼要有這個：家長給的單字不夠一週（提案是週一到週五每天 5 字＝25 個），
 // 太一上課看到安親班課本要能當場補字，而且當場就要能教，不能等回家跑腳本。
@@ -2025,6 +2126,8 @@ function viewTeacher(){
       <div class="navrow"><button class="btn btn-wood" id="twCopy">複製</button></div>`:""}
     <div class="twhint" style="margin-top:14px">已經加過 <b>${loadTeacherUnits().reduce((a,u)=>a+u.words.length,0)}</b> 個字。
       這些字存在這台裝置上，「清除全部紀錄」不會清掉它們。</div>
+    <div class="navrow" style="margin-top:12px">
+      <button class="btn btn-diamond" id="twBackup" style="width:100%">💾 備份／還原（換裝置、誤清都靠它）</button></div>
     <div class="navrow"><button class="btn btn-red" id="twClear">清掉我加過的所有單字</button></div>
   </div>`;
 
@@ -2033,6 +2136,7 @@ function viewTeacher(){
     T.start=e.target.value||T.start; assignDays(); viewTeacher();
   };
   document.getElementById("twBack").onclick=()=>{ sClick(); viewStats(); };
+  document.getElementById("twBackup").onclick=()=>{ sClick(); viewBackup(); };
   document.getElementById("twParse").onclick=async()=>{
     sPlace();
     T.start=document.getElementById("twStart").value||T.start;
