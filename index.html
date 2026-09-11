@@ -128,6 +128,12 @@ header.bar .sp{flex:1;}
 .twhint{font-size:13px; color:#6b5b3e; line-height:1.7; margin:6px 0;}
 .twdate{font-size:16px; padding:6px 8px; border:2px solid var(--wood-d); background:#fffdf6;}
 
+.donebox{margin-top:12px; background:rgba(255,255,255,.55); border:2px solid #cbb894; padding:8px 11px;}
+.donebox summary{cursor:pointer; font-size:13px; font-weight:900; color:#5b4a2e; list-style:none;}
+.donebox summary::-webkit-details-marker{display:none;}
+.donebox summary::before{content:"▸ "; }
+.donebox[open] summary::before{content:"▾ "; }
+
 .modeswitch{display:flex; gap:8px; margin-bottom:12px;}
 .modeswitch .btn{flex:1; font-size:16px;}
 .modeswitch .btn.dim{filter:grayscale(.55) brightness(.9);}
@@ -570,7 +576,7 @@ details.patbox:not([open]) > :not(summary){display:none !important;}
 <script>
 "use strict";
 const DATA = window.EN_WORDS || {units:[]};
-const APP_VER = "v8.1｜2026.09.12 第一天改為 9/12";
+const APP_VER = "v9｜2026.09.12 上課模式＋考試成績＋已完成分區";
 const LS_KEY = "ewq_state_v1";
 let store = loadStore();
 function loadStore(){ try{return JSON.parse(localStorage.getItem(LS_KEY))||{}}catch(e){return {}} }
@@ -604,6 +610,17 @@ function loadTeacherUnits(){
   catch(e){ return []; }
 }
 function saveTeacherUnits(units){ localStorage.setItem(TW_KEY, JSON.stringify(units)); }
+
+// 上課考試的成績。⚠️ 跟進度分開存 —— 小孩按「清除全部紀錄」不能把老師的成績清掉。
+const EX_KEY = "ewq_exams_v1";
+function loadExams(){
+  try{ const v=JSON.parse(localStorage.getItem(EX_KEY)); return Array.isArray(v)?v:[]; }
+  catch(e){ return []; }
+}
+function saveExam(rec){
+  const a=loadExams(); a.unshift(rec);
+  localStorage.setItem(EX_KEY, JSON.stringify(a.slice(0,60)));   // 只留最近 60 筆
+}
 
 // 移植自 build_words.py 的 auto_chunks。刻意只切單音節 —— 多音節自動切很容易切錯，
 // 寧可留空讓老師自己填，也不要教錯（留空＝chunkState 的 "none"，什麼都不顯示）。
@@ -917,14 +934,26 @@ function unitProgress(u){
 function viewHome(){
   S.uid=null; crumb("選單元"); updateStreak();
   const weak=weakList();
-  const cards=allUnits().map(u=>{ const p=unitProgress(u);
+  // 單元一週加五天，一個月就會堆成一面牆。過去的日期自動收進「已完成」，
+  // 首頁只留今天和接下來的，要複習舊字再展開。
+  const today=todayKey();
+  const card=u=>{ const p=unitProgress(u);
     return `<div class="lesson-card block" data-uid="${u.id}">
-      <div class="no">${esc(u.sub||"")}${u.id===todayKey()?'　<span class="utype vo">今天</span>':''}</div>
+      <div class="no">${esc(u.sub||"")}${u.id===today?'　<span class="utype vo">今天</span>':''}</div>
       <div class="nm">${esc(u.title)}</div>
       <div class="meta">${p.n} 個字 ‧ 寫好 ${writeDoneOf(u.id)}／${p.n}</div>
       <div class="bar2"><i style="width:${p.pct}%"></i></div>
       <div class="meta">學過 ${p.learned}／${p.n}　💎精通 ${p.mastered}</div>
-    </div>`; }).join("");
+    </div>`; };
+  const us=allUnits();
+  const past=us.filter(u=>u.id<today), now=us.filter(u=>u.id>=today);
+  const pastMastered=past.reduce((a,u)=>a+unitProgress(u).mastered,0);
+  const pastTotal=past.reduce((a,u)=>a+u.words.length,0);
+  const cards=now.map(card).join("");
+  const doneHTML = past.length ? `
+    <details class="donebox"><summary>📦 已完成 ${past.length} 天（${pastTotal} 個字 ‧ 💎精通 ${pastMastered}）　點開可以回去複習</summary>
+      <div class="lesson-grid" style="margin-top:10px">${past.map(card).join("")}</div>
+    </details>` : "";
   // 「今天的 20 分鐘」＝家長提案裡的三段。順序照提案，狀態一眼看得到。
   const tu=todayUnit(), pu=prevStudiedUnit(tu.id), f=flowRec();
   const wDone=writeDoneOf(tu.id), wAll=tu.words.length;
@@ -954,8 +983,10 @@ function viewHome(){
     ${weak.length?`<div class="home-sec"><div class="home-h">📦 我的單字寶箱（答錯過的字 ${weak.length}）</div>
       <button class="btn btn-red" id="goWeak" style="width:100%">打開單字寶箱 ⛏️</button></div>`:""}
     <div class="home-sec"><div class="home-h">📚 選一個單元</div>
-      <div class="lesson-grid">${cards}</div></div>
+      ${cards?`<div class="lesson-grid">${cards}</div>`:'<div class="statline">今天以後還沒有排單字</div>'}
+      ${doneHTML}</div>
     <div class="home-sec" style="margin-top:16px">
+      <button class="btn btn-wood" id="goClass" style="width:100%;margin-bottom:8px">👨‍🏫 上課模式（老師帶）</button>
       <button class="btn btn-stone" id="goStats">📊 我的進度</button>
       <button class="btn btn-stone" id="goHelp">❓ 怎麼玩</button>
     </div>`;
@@ -969,6 +1000,7 @@ function viewHome(){
   // 單元 id 是日期字串（"2026-09-04"），不能用 + 轉數字，會變成 NaN
   elView.querySelectorAll(".lesson-card").forEach(c=>c.onclick=()=>{ sPlace(); S.uid=c.dataset.uid; viewUnit(); });
   const gw=document.getElementById("goWeak"); if(gw) gw.onclick=()=>{ sClick(); startQuiz("spell", null); };
+  document.getElementById("goClass").onclick=()=>{ sPlace(); viewClass(); };
   document.getElementById("goStats").onclick=()=>{ sClick(); viewStats(); };
   document.getElementById("goHelp").onclick=()=>{ sClick(); viewHelp(); };
 }
@@ -1503,22 +1535,31 @@ function needsWork(uid, w){
   // 還沒精通、而且錯過 → 就是要先練的字
   return boxOf(uid, w.w) < 3 && (store.wrong[keyOf(uid, w.w)] || 0) > 0;
 }
+// list 的每一項都是 {uid, w} ——上課模式會跨好幾個單元出題，
+// 計分的 key 必須跟著各自的單元走，不能用整場共用的一個 uid。
 function startRecall(uid, mode){
   const u=unitById(uid); if(!u) return viewHome();
-  let list=shuffle(u.words.slice());
+  let list=shuffle(u.words.map(w=>({uid, w})));
   // 先洗牌再依「錯過幾次」穩定排序 → 沒記得的排前面，同分的維持隨機
   if(mode==="review"){
-    const wt=w => needsWork(uid, w) ? (store.wrong[keyOf(uid, w.w)] || 0) : 0;
+    const wt=it => needsWork(it.uid, it.w) ? (store.wrong[keyOf(it.uid, it.w.w)] || 0) : 0;
     list=list.sort((a,b)=>wt(b)-wt(a));
   }
   S.rc={uid, mode, list, idx:0, ok:0, missed:[], shown:false};
   renderRecall();
 }
+// 上課模式的考試：題目直接給 {uid,w} 陣列，跑完會留一筆成績
+function startExamRecall(list, scope){
+  if(!list.length){ toast("這個範圍還沒有字 🙂",""); return; }
+  S.rc={uid:null, mode:"dict", list:shuffle(list.slice()), idx:0, ok:0, missed:[], shown:false,
+        exam:{scope, mode:"看中文想英文"}};
+  renderRecall();
+}
 function renderRecall(){
   const R=S.rc; if(!R) return viewHome();
   if(R.idx>=R.list.length) return renderRecallDone();
-  const T=RC[R.mode], w=R.list[R.idx], u=unitById(R.uid);
-  crumb(T.crumb+" "+(R.idx+1)+"/"+R.list.length);
+  const T=RC[R.mode], it=R.list[R.idx], w=it.w;
+  crumb((R.exam?"考試":T.crumb)+" "+(R.idx+1)+"/"+R.list.length);
   elView.innerHTML=`<div class="card block">
     <div class="hud"><span class="hudtxt">第 ${R.idx+1}／${R.list.length} 個</span>
       <span class="expbar"><i style="width:${Math.round(R.idx/R.list.length*100)}%"></i></span>
@@ -1534,7 +1575,7 @@ function renderRecall(){
         <button class="btn btn-red"   id="no">${T.no}</button>
       </div>`
     : `
-      ${(R.mode==="review" && needsWork(R.uid,w)) ? '<div class="sightbadge">⚠️ 上次沒記得，先練這個</div>' : ""}
+      ${(R.mode==="review" && needsWork(it.uid,w)) ? '<div class="sightbadge">⚠️ 上次沒記得，先練這個</div>' : ""}
       <div class="q-prompt">${T.ask}</div>
       <div class="statline">${T.tip}</div>
       <div class="navrow">
@@ -1558,9 +1599,9 @@ function renderRecall(){
   elView.querySelector(".rcpic").onclick=()=>{ sClick(); speak(w.w); };
 
   function grade(right){
-    const k=keyOf(R.uid, w.w);
+    const k=keyOf(it.uid, w.w);
     store.stats.total++;
-    const us=store.unitStats[R.uid]=store.unitStats[R.uid]||{ok:0,total:0}; us.total++;
+    const us=store.unitStats[it.uid]=store.unitStats[it.uid]||{ok:0,total:0}; us.total++;
     if(right){
       store.stats.ok++; us.ok++;
       store.box[k]=Math.min((store.box[k]||0)+1, 3);
@@ -1568,7 +1609,7 @@ function renderRecall(){
     } else {
       store.box[k]=1;                       // 掉回第一盒，之後會多出現幾次
       store.wrong[k]=(store.wrong[k]||0)+1; // ＝自動進單字寶箱
-      R.missed.push(w); sNo();
+      R.missed.push(it); sNo();
     }
     saveStore();
     R.idx++; R.shown=false; renderRecall();
@@ -1576,9 +1617,17 @@ function renderRecall(){
 }
 function renderRecallDone(){
   const R=S.rc, T=RC[R.mode], n=R.list.length;
-  const f=flowRec(); f[R.mode]={ok:R.ok, n:n, uid:R.uid}; saveStore();
   const all = R.ok===n;
   if(all){ confetti(); sWin(); addCoins(5); } else { sPlace(); }
+
+  // 上課考試：留一筆成績，不碰每日流程的狀態（那是給孩子平日在家用的）
+  if(R.exam){
+    saveExam({ts:Date.now(), date:todayKey(), scope:R.exam.scope, mode:R.exam.mode,
+              n:n, ok:R.ok, wrong:R.missed.map(m=>({w:m.w.w, zh:m.w.zh}))});
+    return renderExamDone(R);
+  }
+
+  const f=flowRec(); f[R.mode]={ok:R.ok, n:n, uid:R.uid}; saveStore();
   if(R.mode==="dict"){
     if(all) unlock("dict5");
     // 「寫完了沒」要看這次默寫的那個單元。不能用 todayUnit()——當天單元一寫完
@@ -1588,8 +1637,8 @@ function renderRecallDone(){
   dailyProgress(R.mode);
   const miss = R.missed.length ? `
     <div class="hint" style="margin-top:12px;text-align:left">${T.missHead}
-      <div style="margin-top:6px">${R.missed.map(w=>
-        `<b style="display:inline-block;margin:2px 8px 2px 0">${esc(w.w)}</b><span style="opacity:.75">${esc(w.zh)}</span>`
+      <div style="margin-top:6px">${R.missed.map(m=>
+        `<b style="display:inline-block;margin:2px 8px 2px 0">${esc(m.w.w)}</b><span style="opacity:.75">${esc(m.w.zh)}</span>`
       ).join("　")}</div></div>` : "";
   const nextBtn = R.mode==="review"
     ? '<button class="btn btn-gold" id="next">② 學今天的 5 個新字 →</button>'
@@ -1629,6 +1678,13 @@ function startQuiz(mode, uid){
   const queue=buildQueue(uid, 12);
   if(!queue.length){ toast("這裡還沒有字可以練 🙂",""); return; }
   S.q={mode, uid, queue, idx:0, ok:0, no:0, combo:0};
+  renderQ();
+}
+// 上課模式的拼字磚考試：題目直接指定，跑完留成績
+function startExamQuiz(list, scope){
+  if(!list.length){ toast("這個範圍還沒有字 🙂",""); return; }
+  S.q={mode:"spell", uid:null, queue:list.slice(), idx:0, ok:0, no:0, combo:0,
+       exam:{scope, mode:"拼字磚"}, wrong:[]};
   renderQ();
 }
 const CONFUSE={a:"eo",b:"dp",c:"sk",d:"bq",e:"ai",f:"t",g:"j",h:"n",i:"ley",j:"g",k:"c",l:"i",m:"nw",
@@ -1709,6 +1765,7 @@ function answer(item, right){
   } else {
     Q.no++; Q.combo=0; store.box[k]=1;
     store.wrong[k]=(store.wrong[k]||0)+1; saveStore();
+    if(Q.exam) Q.wrong.push({w:item.w.w, zh:item.w.zh});
     sNo(); buddyReact('sad');
     setTimeout(()=>renderFix(item), 700);
   }
@@ -1732,6 +1789,12 @@ function renderFix(item){
 function renderQuizDone(){
   const Q=S.q, total=Q.ok+Q.no, pct=total?Math.round(Q.ok/total*100):0;
   sWin();
+  if(Q.exam){
+    saveExam({ts:Date.now(), date:todayKey(), scope:Q.exam.scope, mode:Q.exam.mode,
+              n:total, ok:Q.ok, wrong:Q.wrong.slice()});
+    return renderExamDone({list:{length:total}, ok:Q.ok,
+      missed:Q.wrong.map(x=>({w:{w:x.w, zh:x.zh}})), exam:Q.exam});
+  }
   if(total>0 && Q.no===0){ unlock("perfect"); confetti(); }
   if(Q.uid!=null){ const u=unitById(Q.uid);
     if(u && u.words.every(w=>boxOf(u.id,w.w)>=3)) unlock("master"); }
@@ -1786,6 +1849,126 @@ function viewStats(){
   document.getElementById("reset").onclick=()=>{
     if(!confirm("確定要把所有進度（等級、金幣、單字寶箱）清掉嗎？這個動作沒辦法復原。")) return;
     localStorage.removeItem(LS_KEY); location.reload();
+  };
+}
+
+// ====== 上課模式：太一帶學生大量練習 ＋ 考試留成績 ======
+// 分工：平日在家用紙本學新字（五步驟），週末上課用這裡大量複習舊字並考試。
+// 所以這裡出題是「跨單元、按範圍」，不是每日流程那種「今天這 5 個」。
+function classPool(kind, days){
+  const today=todayKey();
+  let pairs=allPairs().filter(p=>p.uid<=today);        // 還沒到的日期不出題
+  if(kind==="recent"){
+    const from=dateAdd(today, -days);
+    pairs=pairs.filter(p=>p.uid>=from);
+  } else if(kind==="weak"){
+    pairs=pairs.filter(p=>boxOf(p.uid,p.w.w)<3);        // 還沒精通的
+  } else if(kind==="box"){
+    pairs=pairs.filter(p=>(store.wrong[keyOf(p.uid,p.w.w)]||0)>0 && boxOf(p.uid,p.w.w)<3);
+  }
+  // 第 1 盒最優先，其次第 2 盒，精通的最後 —— 讓不熟的字先被考到
+  return shuffle(pairs).sort((a,b)=>boxOf(a.uid,a.w.w)-boxOf(b.uid,b.w.w));
+}
+const CLASS_SCOPES=[
+  {k:"recent", d:7,  ic:"🗓️", nm:"最近 7 天的字",   ds:"上週學的，考前複習用"},
+  {k:"recent", d:30, ic:"📅", nm:"最近一個月的字", ds:"範圍大一點的總複習"},
+  {k:"weak",   d:0,  ic:"🎯", nm:"還沒精通的字",   ds:"答對三次才算精通，沒到的全抓出來"},
+  {k:"box",    d:0,  ic:"📦", nm:"錯過的字",       ds:"只練單字寶箱裡的"},
+];
+function viewClass(){
+  crumb("上課模式");
+  S.cls = S.cls || {si:0, size:15, mode:"recall"};
+  const C=S.cls;
+  const counts=CLASS_SCOPES.map(sc=>classPool(sc.k, sc.d).length);
+  const scopeHTML=CLASS_SCOPES.map((sc,i)=>`
+    <button class="btn ${i===C.si?'btn-grass':'btn-stone'} clsopt" data-i="${i}" style="width:100%;margin-bottom:7px;text-align:left">
+      ${sc.ic} ${sc.nm}　<span style="opacity:.85;font-size:13px">${counts[i]} 個字</span>
+      <div style="font-size:12px;font-weight:400;opacity:.8;margin-top:2px">${sc.ds}</div>
+    </button>`).join("");
+  const pick=(v,cur,cls)=>`<button class="btn ${v===cur?'btn-gold':'btn-stone'} ${cls}" data-v="${v}" style="flex:1">${v}</button>`;
+  const avail=counts[C.si];
+  elView.innerHTML=`<div class="card block" style="text-align:left">
+    <div class="q-prompt" style="text-align:center">👨‍🏫 上課模式</div>
+    <div class="statline" style="text-align:center">帶學生大量複習，跑完會留一筆成績</div>
+    <div class="lab" style="margin-top:12px">① 考哪些字</div>
+    ${scopeHTML}
+    <div class="lab" style="margin-top:12px">② 考幾個</div>
+    <div style="display:flex;gap:7px">
+      ${[10,15,25,999].map(v=>`<button class="btn ${v===C.size?'btn-gold':'btn-stone'} clssize" data-v="${v}" style="flex:1">${v===999?'全部':v}</button>`).join("")}
+    </div>
+    <div class="lab" style="margin-top:12px">③ 怎麼考</div>
+    <div style="display:flex;gap:7px">
+      <button class="btn ${C.mode==='recall'?'btn-gold':'btn-stone'} clsmode" data-v="recall" style="flex:1">👀 看中文想英文</button>
+      <button class="btn ${C.mode==='spell'?'btn-gold':'btn-stone'} clsmode" data-v="spell" style="flex:1">🧱 拼字磚</button>
+    </div>
+    <div class="hint" style="margin-top:10px">
+      ${C.mode==='recall'?'看中文和圖，學生說或寫出英文，你按對／錯。':'學生點字母磚拼出來，程式自動判分。'}
+    </div>
+    <div class="navrow" style="margin-top:14px">
+      <button class="btn btn-diamond" id="clsGo" style="width:100%">開始（${Math.min(avail, C.size)} 題）</button>
+    </div>
+    <div class="navrow">
+      <button class="btn btn-wood" id="clsLog">📋 上課紀錄（${loadExams().length}）</button>
+      <button class="btn btn-stone" id="clsBack">🏠 回首頁</button>
+    </div></div>`;
+  elView.querySelectorAll(".clsopt").forEach(b=>b.onclick=()=>{ sClick(); C.si=+b.dataset.i; viewClass(); });
+  elView.querySelectorAll(".clssize").forEach(b=>b.onclick=()=>{ sClick(); C.size=+b.dataset.v; viewClass(); });
+  elView.querySelectorAll(".clsmode").forEach(b=>b.onclick=()=>{ sClick(); C.mode=b.dataset.v; viewClass(); });
+  document.getElementById("clsBack").onclick=()=>{ sClick(); viewHome(); };
+  document.getElementById("clsLog").onclick=()=>{ sClick(); viewExamLog(); };
+  document.getElementById("clsGo").onclick=()=>{
+    sPlace();
+    const sc=CLASS_SCOPES[C.si];
+    const list=classPool(sc.k, sc.d).slice(0, C.size);
+    if(!list.length){ toast("這個範圍還沒有字 🙂",""); return; }
+    if(C.mode==="spell") startExamQuiz(list, sc.nm);
+    else startExamRecall(list, sc.nm);
+  };
+}
+
+function renderExamDone(R){
+  const n=R.list.length, pct=Math.round(R.ok/n*100);
+  const wrong=R.missed.map(m=>
+    `<button class="wchip" data-w="${esc(m.w.w)}">${esc(m.w.w)} <i>${esc(m.w.zh)}</i></button>`).join("");
+  crumb("考試結果");
+  elView.innerHTML=`<div class="card block">
+    <div class="q-prompt">📋 ${esc(R.exam.scope)}</div>
+    <div class="word-big">${R.ok} ／ ${n}</div>
+    <div class="statline">正確率 ${pct}%　‧　${esc(R.exam.mode)}</div>
+    ${R.missed.length?`<div class="field full"><div class="lab">沒過的字（已進單字寶箱，點可唸音）</div>
+      <div class="chips">${wrong}</div></div>`
+      :'<div class="statline" style="margin-top:10px">全部都過了 💎</div>'}
+    <div class="hint" style="margin-top:10px">這筆成績已經存起來，在「📋 上課紀錄」看得到。</div>
+    <div class="navrow" style="margin-top:12px">
+      <button class="btn btn-grass" id="again">再考一輪</button>
+      <button class="btn btn-stone" id="home">🏠 回首頁</button>
+    </div></div>`;
+  elView.querySelectorAll(".wchip").forEach(b=>b.onclick=()=>{ sClick(); speak(b.dataset.w); });
+  document.getElementById("again").onclick=()=>{ sPlace(); S.rc=null; S.q=null; viewClass(); };
+  document.getElementById("home").onclick=()=>{ sClick(); S.rc=null; S.q=null; viewHome(); };
+}
+
+function viewExamLog(){
+  crumb("上課紀錄");
+  const ex=loadExams();
+  const rows=ex.map((e,i)=>{
+    const pct=Math.round(e.ok/e.n*100);
+    const ws=e.wrong.length? e.wrong.map(w=>esc(w.w)).join("、") : "（全對）";
+    return `<div class="urow"><b>${esc(e.date)}　${esc(e.scope)}</b>
+      <div class="ds">${esc(e.mode)} ‧ ${e.ok}／${e.n} ‧ 正確率 ${pct}%</div>
+      <div class="ds" style="color:#8a3b2e">沒過：${ws}</div></div>`; }).join("");
+  elView.innerHTML=`<div class="card block" style="text-align:left">
+    <div class="q-prompt" style="text-align:center">📋 上課紀錄</div>
+    <div class="statline" style="text-align:center">最近 ${ex.length} 筆（只留最近 60 筆）</div>
+    ${ex.length?rows:'<div class="statline">還沒有考試紀錄</div>'}
+    <div class="navrow" style="margin-top:12px">
+      <button class="btn btn-stone" id="back">← 回上課模式</button>
+      <button class="btn btn-red" id="clr">清掉考試紀錄</button>
+    </div></div>`;
+  document.getElementById("back").onclick=()=>{ sClick(); viewClass(); };
+  document.getElementById("clr").onclick=()=>{
+    if(!confirm("確定要刪掉所有上課考試紀錄嗎？（學生的進度不受影響）")) return;
+    localStorage.removeItem(EX_KEY); viewExamLog();
   };
 }
 
