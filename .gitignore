@@ -2,3 +2,7 @@
 *.log
 
 __pycache__/
+單字總表.html
+人聲比較.html
+voice-test/
+校對確認.html

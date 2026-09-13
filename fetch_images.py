@@ -11,7 +11,7 @@ ARASAAC（西班牙 Aragón 政府的溝通輔具圖庫）授權 CC BY-NC-SA，
 抓不到或畫得不好的字，自己放一張 img/<單字>.png 進去，
 腳本會跳過已存在的檔，不會覆蓋。
 """
-import json, os, re, sys, urllib.request
+import json, os, re, sys, urllib.parse, urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 IMG = os.path.join(HERE, "img")
@@ -27,6 +27,35 @@ OVERRIDE = {
     "rice": 39387,  # 預設 6911 是稻穗，不是煮好的飯
     "Earth": 30015, # 預設 3160 是「土壤」不是地球；30015 是藍海綠陸的那顆地球，
                     # 正好對上 CS3 課堂問的 What makes the Earth blue and green
+    # ── M1 課本（2026-09-12）。bestsearch 查無或語意不對，逐張看過後指定：
+    "shop": 39753,             # 9058 是一袋蔬果（比較像 groceries），39753 是推推車買東西
+    "smoothie": 11463,         # 查無 smoothie；11463 是果汁機＋杯子，正是果昔的做法
+    "department store": 15551, # 查無；15551 是 shopping mall
+    "borrow": 34790,           # 查無；34790 是 lend a book，正好對上課本的 borrow books
+    "postal worker": 2690,     # 查無；2690 postman
+    "server": 6072,            # 查無；課本的 server 是餐廳服務生＝waiter
+    "vet": 2780,               # 查無縮寫；2780 veterinarian
+    "fight fires": 5907,       # 預設 6477 是「兩個人吵架」；5907 是水柱撲滅火
+    "kick": 5961,              # 預設那張太一說看不出在踢；5961 是射門的動作
+    "old": 21008,              # 預設 4770 是一台舊車；課本講的是人年紀大，21008 是老夫婦
+    "tight": 31052,            # 查無；31052 是鞋子太緊（課本 tight pants 同一個意思）
+    "sour": 4552,              # 預設是 sour cream（酸奶油）；4552 是被酸到的表情＋檸檬
+    "baggy": 24881,            # 查無；24881 loose shirt
+    "desk": 11302,             # 查無；11302 school desk
+    "dresser": 16281,          # 查無；16281 chest of drawers
+    "bookcase": 3279,          # 查無；3279 bookshelf
+    # ── 第二輪：整張對照表看過後發現語意不對的（2026-09-12）
+    "gum": 8724,               # 預設是一瓶膠水（西語 goma 同時是膠和口香糖）；8724 才是口香糖
+    "park": 2434,              # 預設 5379 是停車場；2434 是有樹有步道的公園
+    "cook": 30526,             # 預設是一只鍋子；課本 cook 是「廚師」這個人
+    "fly": 9205,               # 預設是蒼蠅（fly 的名詞義）；課本是 fly planes
+    "cold": 5479,              # 舊圖是一杯冰塊（形容詞 cold）；課本 L4 的 cold 是「感冒」
+    "salesperson": 37809,      # 34878 畫的是店面；37809 才是站在櫃檯的店員
+    "thick": None,             # 預設是濃稠的糖漿；ARASAAC 沒有「厚的」，用 emoji
+    # None ＝ 這個字寧可沒有圖。ARASAAC 只有語意會教錯的圖，程式退回 emoji：
+    "light": None,             # 只有「明暗漸層」，課本 light 是「輕的」
+    "hard": None,              # 只有「數學難題」，課本 hard 是「硬的」
+    "greasy": None,            # 只有「胖瘦對比」，跟「油膩的」無關
 }
 # img/big.png 是手工合成的大小對比圖 —— ARASAAC 沒有小三看得懂的「大的」
 # （不是紅方框比大小就是 XL 吊牌）。腳本會跳過已存在的檔，不會蓋掉手工圖。
@@ -63,8 +92,11 @@ def main():
         try:
             if w in OVERRIDE:
                 pid, kw = OVERRIDE[w], "指定"
+                if pid is None:      # 刻意不給圖，讓程式退回 emoji
+                    print(f"  {w:<8} — 不抓圖（ARASAAC 的圖語意會教錯），用 emoji")
+                    continue
             else:
-                hits = json.loads(get(SEARCH.format(w)))
+                hits = json.loads(get(SEARCH.format(urllib.parse.quote(w))))
                 if not isinstance(hits, list) or not hits:
                     raise ValueError("查無圖")
                 pid = hits[0]["_id"]

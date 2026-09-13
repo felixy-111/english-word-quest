@@ -451,6 +451,8 @@ details.patbox:not([open]) > :not(summary){display:none !important;}
 .slot{width:44px; height:56px; border:3px dashed var(--panelline); border-radius:5px; background:#fff;
   font-family:"SF Mono",Menlo,Consolas,monospace; font-size:32px; font-weight:800; line-height:50px;}
 .slot.has{border-style:solid; border-color:var(--dirt); background:#fffdf0;}
+/* 多字詞（potato chips）的空格：畫成空隙，不是可以填的格子 */
+.slotgap{width:18px; height:56px;}
 .slot.right{border-color:var(--green); background:#e7f6df;}
 .slot.wrong{border-color:var(--red); background:#fbe6e3;}
 .tiles{display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin:10px 0 4px;}
@@ -481,6 +483,7 @@ details.patbox:not([open]) > :not(summary){display:none !important;}
 .wmeta .pos{ color:#1b5566; background:var(--sky2); border-radius:10px; padding:1px 9px; font-size:14px; margin-right:6px; }
 .wchunk{ font-family:"SF Mono",Menlo,Consolas,monospace; font-size:15px; color:#1b5566; margin-top:3px; }
 .wchunk.sight{ font-family:inherit; color:#8a6238; }
+.mute{ opacity:.35; }
 .wbtn{ border:none; font-family:inherit; font-weight:800; color:#fff; background:var(--grass);
   padding:10px 12px; border-radius:6px; font-size:15px; cursor:pointer; white-space:nowrap;
   box-shadow: inset 2px 2px 0 rgba(255,255,255,.3), inset -3px -3px 0 rgba(0,0,0,.25); }
@@ -765,9 +768,48 @@ document.addEventListener("touchmove", e=>{
   const atTop=el.scrollTop<=0, atBottom=el.scrollTop+window.innerHeight>=el.scrollHeight-1;
   if((atTop&&dy>0)||(atBottom&&dy<0)) e.preventDefault();
 }, {passive:false});
-// rate 0.75：小三要聽清楚每個音，比正常語速慢一點
+// ── 發音：優先播預先做好的音檔 ──────────────────────────────────────────
+// audio/<單字>.mp3 由 make_audio.py 用 macOS say 產生（Tom 增強音質 150 wpm，
+// 其中 7 個字用 Allison）。為什麼不直接用瀏覽器的 speechSynthesis：
+//   ① 每台裝置裝的人聲不同，孩子的 iPad 聽到的跟老師挑的不一樣
+//   ② 語調會飄（唸孤立單字時像句子講到一半），而且沒辦法從網頁修
+//   ③ 音檔可以離線播，SW 會跟著快取
+// 老師現場加的字沒有音檔，播放失敗時自動退回瀏覽器語音，所以下面的 TTS 版本要留著。
+let curClip=null;
+function stopClip(){ if(curClip){ try{ curClip.pause(); }catch(e){} curClip=null; } }
+function clipURL(w){ return "audio/"+encodeURIComponent(w)+".mp3"; }
+// 依序播一串音檔；任何一段失敗就整串放棄、走 fallback（不會播到一半沒聲音）
+function playClips(urls, onFail){
+  stopClip();
+  let i=0;
+  const next=()=>{
+    if(i>=urls.length){ curClip=null; return; }
+    const a=new Audio(urls[i++]);
+    curClip=a;
+    a.onended=next;
+    a.onerror=()=>{ curClip=null; if(onFail) onFail(); };
+    a.play().catch(()=>{ curClip=null; if(onFail) onFail(); });
+  };
+  next();
+}
 function speak(text, rate){
-  if(!store.opt.voice || !("speechSynthesis" in window)) return;
+  if(!store.opt.voice) return;
+  playClips([clipURL(text)], ()=>ttsSpeak(text, rate));
+}
+// 音塊分開唸：c-at → "c" 停 "at" 停 整個字
+function speakChunks(word){
+  if(!store.opt.voice) return;
+  const parts=(word.chunks||"").split("-").filter(Boolean);
+  if(!parts.length){ speak(word.w); return; }
+  const urls=parts.map((_,i)=>"audio/"+encodeURIComponent(word.w)+"_c"+i+".mp3");
+  urls.push(clipURL(word.w));
+  playClips(urls, ()=>ttsChunks(word));
+}
+
+// ── 退路：沒有音檔時才用瀏覽器語音（老師現場加的字）──────────────────────
+// rate 0.75：小三要聽清楚每個音，比正常語速慢一點
+function ttsSpeak(text, rate){
+  if(!("speechSynthesis" in window)) return;
   const ss=window.speechSynthesis;
   try{ ss.cancel(); }catch(e){}
   const u=new SpeechSynthesisUtterance(text);
@@ -776,11 +818,10 @@ function speak(text, rate){
   ss.speak(u);
   setTimeout(()=>{ try{ if(ss.paused) ss.resume(); }catch(e){} }, 60);
 }
-// 音塊分開唸：c-at → "c" 停 "at" 停 整個字
-function speakChunks(word){
-  if(!store.opt.voice || !("speechSynthesis" in window)) return;
+function ttsChunks(word){
+  if(!("speechSynthesis" in window)) return;
   const parts=(word.chunks||"").split("-").filter(Boolean);
-  if(!parts.length){ speak(word.w); return; }
+  if(!parts.length){ ttsSpeak(word.w); return; }
   const ss=window.speechSynthesis; try{ ss.cancel(); }catch(e){}
   const v=getVoice();
   parts.concat([word.w]).forEach((p,i)=>{
@@ -793,7 +834,6 @@ function speakChunks(word){
     ss.speak(u);
   });
 }
-
 
 // ====== 像素雲 ======
 (function makeClouds(){
@@ -868,10 +908,17 @@ function updateStreak(){ const today=new Date().toLocaleDateString('en-CA');
   resetDaily(); }
 function resetDaily(){ const today=new Date().toLocaleDateString('en-CA');
   if(!store.daily || store.daily.date!==today){ store.daily={date:today, seen:0, ok:0, lesson:0, claimed:{}}; saveStore(); } }
+// ②「寫進練習本」的目標＝今天那個單元的字數，不是寫死的 5。
+// 設計原則：做完今天的 20 分鐘 ⇔ 今日任務剛好全滿；單元字數改了這裡要跟著動。
+function dailyTarget(def){
+  if(def.id!=="write") return def.target;
+  const u=todayUnit();
+  return (u && u.words.length) || def.target;
+}
 function dailyHTML(){ resetDaily(); const d=store.daily;
-  const rows=DAILY_DEFS.map(x=>{ const v=Math.min(d[x.id]||0, x.target), done=!!d.claimed[x.id];
+  const rows=DAILY_DEFS.map(x=>{ const t=dailyTarget(x), v=Math.min(d[x.id]||0, t), done=!!d.claimed[x.id];
     return `<div class="dqrow ${done?'done':''}"><span>${done?'✅':x.ic}</span><span style="flex:1">${x.label}</span>
-      <span class="dqbar"><i style="width:${Math.round(v/x.target*100)}%"></i></span><span class="dqn">${v}/${x.target}</span></div>`; }).join("");
+      <span class="dqbar"><i style="width:${Math.round(v/t*100)}%"></i></span><span class="dqn">${v}/${t}</span></div>`; }).join("");
   const allDone=DAILY_DEFS.every(x=>d.claimed[x.id]);
   return `<div class="dq" id="dqbox"><div class="dqtitle">📋 今日任務${allDone?'（全部完成 🎉）':'（各 +10💰，全部完成有驚喜）'}</div>${rows}</div>`;
 }
@@ -912,7 +959,7 @@ const ACHV=[
   {id:"streak7",   ic:"📅",nm:"七日勤學",ds:"連續學習 7 天"},
   {id:"master",    ic:"💎",nm:"單字大師",ds:"精通一整個單元"},
   {id:"flow_done", ic:"⚡",nm:"二十分鐘",ds:"一天之內把三段全做完"},
-  {id:"dict5",     ic:"✏️",nm:"默寫全對",ds:"蓋起來默寫 5 個字全對"},
+  {id:"dict5",     ic:"✏️",nm:"默寫全對",ds:"蓋起來默寫一整個單元全對"},
 ];
 function unlock(id){ if(store.achv[id]) return; const a=ACHV.find(x=>x.id===id); if(!a) return;
   store.achv[id]=1; saveStore(); sAchv(); toast(a.ic+" 成就解鎖："+a.nm,""); renderHUD(); }
@@ -930,12 +977,13 @@ function flashHUD(){ const el=document.querySelector("#topxp .xpbar"); if(!el) r
 // 對應首頁三格。App 平日不教新字（那是紙本的事），所以沒有「學新字」這一項。
 const DAILY_DEFS=[
   {id:"review", target:1, ic:"①", label:"複習單字庫的舊字"},
-  {id:"write",  target:5, ic:"②", label:"5 個字寫進練習本"},
+  // target 是預設值；實際目標看今天單元有幾個字（見 dailyTarget）——一天不一定是 5 個字
+  {id:"write",  target:5, ic:"②", label:"今天的字寫進練習本"},
   {id:"dict",   target:1, ic:"③", label:"蓋起來默寫"},
 ];
 function dailyProgress(id, n){ resetDaily(); const d=store.daily, def=DAILY_DEFS.find(x=>x.id===id); if(!def) return;
   d[id]=(d[id]||0)+(n||1);
-  if(d[id]>=def.target && !d.claimed[id]){ d.claimed[id]=1; addCoins(10);
+  if(d[id]>=dailyTarget(def) && !d.claimed[id]){ d.claimed[id]=1; addCoins(10);
     sAchv(); toast("✅ 每日任務完成："+def.label+"　+10💰",""); }
   saveStore();
   if(DAILY_DEFS.every(x=>d.claimed[x.id]) && !d.claimed.all){ d.claimed.all=1; saveStore();
@@ -1000,10 +1048,10 @@ function viewHome(){
     ? cardHTML(1, f.review?"done":"now", "複習單字庫的舊字",
         f.review ? `記得 ${f.review.ok}／${f.review.n}` : `以前學過的字，蓋起來想想看（${bank.length} 個）`, "3 分鐘")
     : cardHTML(1, "dim", "複習單字庫的舊字", "單字庫還沒有舊字，直接從 ② 開始", "3 分鐘");
-  const s2 = cardHTML(2, step2Done?"done":((bank.length&&!f.review)?"":"now"), "今天紙本要寫的 5 個字",
+  const s2 = cardHTML(2, step2Done?"done":((bank.length&&!f.review)?"":"now"), `今天紙本要寫的 ${wAll} 個字`,
         `${tu.title} ‧ 對照著抄進練習本 ‧ 寫好 ${wDone}／${wAll}`, "15 分鐘");
   const s3 = cardHTML(3, f.dict?"done":(step2Done?"now":"dim"), "蓋起來默寫",
-        f.dict ? `${doneTitle(f.dict, tu.title)} ‧ 對了 ${f.dict.ok}／${f.dict.n}` : (step2Done?"看中文，把 5 個字寫在練習本上":"建議先做完 ②"), "2 分鐘");
+        f.dict ? `${doneTitle(f.dict, tu.title)} ‧ 對了 ${f.dict.ok}／${f.dict.n}` : (step2Done?"看中文，把今天的字寫在練習本上":"建議先做完 ②"), "2 分鐘");
 
   elView.innerHTML=`
     <div class="hero">
@@ -1039,7 +1087,7 @@ function viewHome(){
 
 
 // ====== 抄寫單（練習本用）======
-// 一個日期單元＝當天要寫的 5 個字，全部都要寫，不是只挑錯的。
+// 一個日期單元＝當天要寫的字（CS3 是 5 個，M1 課本是 8 個），全部都要寫，不是只挑錯的。
 // 進度存在 store.write[unitId].done[word]。
 const POS_ZH={"n.":"名詞","v.":"動詞","adj.":"形容詞","adv.":"副詞","aux.":"助動詞","num.":"數字","prep.":"介系詞","pron.":"代名詞"};
 function todayKey(){ return new Date().toLocaleDateString('en-CA'); }
@@ -1056,7 +1104,16 @@ function wordOf(uid,w){ const u=unitById(uid); return u && u.words.find(x=>x.w==
 //    自動切字只處理單音節（build_words.py 的 auto_chunks），多音節一律留空，
 //    所以「留空」在這個系統裡是常態，不是「這個字不規則」的訊號。
 function chunkState(w){ return w.sight ? "sight" : (w.chunks ? "chunks" : "none"); }
-const SIGHT_HTML = '<div class="sightbadge">⭐ 這個字拼不出來，要整個記起來</div>';
+// 不發音的字母（knife 的 k）畫淡 —— 字仍然完整寫出來，只是告訴孩子那個音不唸。
+// 太一 2026-09-13：不要再出現「拼不出來」這種話，家長跟孩子會以為只能死背。
+function chunkHTML(w){
+  const t=esc(w.chunks||"");
+  if(!w.silent) return t;
+  const i=t.toLowerCase().indexOf(String(w.silent).toLowerCase());
+  if(i<0) return t;
+  return t.slice(0,i)+'<span class="mute">'+t.slice(i,i+String(w.silent).length)+'</span>'+t.slice(i+String(w.silent).length);
+}
+const SIGHT_HTML = '<div class="sightbadge">⭐ 這個字的拼法特別，跟著老師唸一次</div>';
 
 function picHTML(w, cls, animate){
   const an = (animate && w.anim) ? " anim-"+w.anim : "";
@@ -1095,8 +1152,8 @@ function viewWrite(uid){
       <div class="wmain">
         <div class="ww" data-w="${esc(w.w)}">${esc(w.w)}</div>
         <div class="wmeta"><span class="pos">${esc(w.pos||"")}${esc(POS_ZH[w.pos]||"")}</span>${esc(w.zh)}</div>
-        ${chunkState(w)==="sight" ? '<div class="wchunk sight">⭐ 這個字拼不出來，要整個記</div>'
-          : chunkState(w)==="chunks" ? `<div class="wchunk">${esc(w.chunks)}</div>` : ""}
+        ${chunkState(w)==="sight" ? '<div class="wchunk sight">⭐ 拼法特別，跟著老師唸</div>'
+          : chunkState(w)==="chunks" ? `<div class="wchunk">${chunkHTML(w)}</div>` : ""}
       </div>
       <button class="wbtn ${done?'on':''}">${done?'✅ 已寫':'寫好了'}</button>
     </div>`; }).join("");
@@ -1146,7 +1203,7 @@ function viewUnit(){
     <div class="home-sec" style="margin-top:12px">
       <div class="home-h">聽 → 說 → 看 → 拆 → 寫</div>
       <button class="btn btn-grass" id="mLearn" style="width:100%;margin-bottom:8px">📖 學新字（聽說看拆）${unlearned?`　還有 ${unlearned} 個沒學`:""}</button>
-      <button class="btn btn-gold" id="mWrite" style="width:100%;margin-bottom:8px">📝 寫這 5 個字（${writeDoneOf(u.id)}／${p.n}）</button>
+      <button class="btn btn-gold" id="mWrite" style="width:100%;margin-bottom:8px">📝 寫這 ${p.n} 個字（${writeDoneOf(u.id)}／${p.n}）</button>
       <button class="btn btn-diamond" id="mDict" style="width:100%">✏️ 蓋起來默寫</button>
     </div>
     <div class="home-sec" style="margin-top:14px">
@@ -1172,7 +1229,7 @@ function viewWordList(){
     const tag=b>=3?'<span class="tag ok">💎精通</span>':isSeen(u.id,w.w)?`<span class="tag mid">複習中 ${b}/3</span>`:'<span class="tag new">沒學過</span>';
     return `<div class="wrow" data-w="${esc(w.w)}">
       <span class="ww">${esc(w.w)}</span><span class="wz">${esc(w.zh)}</span>
-      <span class="wc">${esc(w.chunks||"")}</span>${tag}${nw?`<span class="tag bad">錯 ${nw}</span>`:""}</div>`; }).join("");
+      <span class="wc">${chunkHTML(w)}</span>${tag}${nw?`<span class="tag bad">錯 ${nw}</span>`:""}</div>`; }).join("");
   elView.innerHTML=`<div class="card block"><div class="q-prompt">📋 ${esc(u.title)} 單字表</div>
     <div class="statline">點單字可以聽發音</div>
     <div class="wlist">${rows}</div>
@@ -1485,7 +1542,7 @@ function renderLearn(){
       <div class="q-prompt">③ 看圖，把聲音跟畫面連起來${chunkState(w)==="none"?"":"　④ 看看它怎麼拆"}</div>
       <div class="word-big" id="wordBig">${esc(w.w)}</div>
       ${chunkState(w)==="sight" ? SIGHT_HTML
-        : chunkState(w)==="chunks" ? `<div class="chunks" id="chunks">${esc(w.chunks)}</div>` : ""}
+        : chunkState(w)==="chunks" ? `<div class="chunks" id="chunks">${chunkHTML(w)}</div>` : ""}
       <div class="zh-big"><span class="pos">${esc(w.pos||"")}${esc(POS_ZH[w.pos]||"")}</span>${esc(w.zh)}</div>
       ${w.family?`<div class="fam">🏠 住在 <b>${esc(w.family)}</b> 這一家</div>`:""}
       ${w.sent?`<div class="sent">${esc(w.sent)}<div class="sentzh">${esc(w.sentZh||"")}</div></div>`:""}
@@ -1525,7 +1582,7 @@ function renderLearnDone(){
     <div class="q-prompt">📖 前四步走完了！</div>
     <div class="statline">最後一步是「寫」——去把這 ${L.list.length} 個字寫進練習本</div>
     <div class="navrow">
-      <button class="btn btn-gold" id="toWrite">📝 去寫這 5 個字</button>
+      <button class="btn btn-gold" id="toWrite">📝 去寫這 ${L.list.length} 個字</button>
       <button class="btn btn-stone" id="back">← 回單元</button>
     </div></div>`;
   document.getElementById("toWrite").onclick=()=>{ sPlace(); viewWrite(S.uid); };
@@ -1620,7 +1677,7 @@ function renderRecall(){
     ${R.shown ? `
       <div class="word-big" id="wordBig">${esc(w.w)}</div>
       ${chunkState(w)==="sight" ? SIGHT_HTML
-        : chunkState(w)==="chunks" ? `<div class="chunks" id="chunks">${esc(w.chunks)}</div>` : ""}
+        : chunkState(w)==="chunks" ? `<div class="chunks" id="chunks">${chunkHTML(w)}</div>` : ""}
       <div class="navrow">
         <button class="btn btn-grass" id="yes">${T.yes}</button>
         <button class="btn btn-red"   id="no">${T.no}</button>
@@ -1692,7 +1749,7 @@ function renderRecallDone(){
         `<b style="display:inline-block;margin:2px 8px 2px 0">${esc(m.w.w)}</b><span style="opacity:.75">${esc(m.w.zh)}</span>`
       ).join("　")}</div></div>` : "";
   const nextBtn = R.mode==="review"
-    ? '<button class="btn btn-gold" id="next">② 去寫今天的 5 個字 →</button>'
+    ? '<button class="btn btn-gold" id="next">② 去寫今天的字 →</button>'
     : '<button class="btn btn-gold" id="next">🏠 今天的 20 分鐘完成了</button>';
   elView.innerHTML=`<div class="card block">
     <div class="q-prompt">${T.doneHead(n)}</div>
@@ -1765,12 +1822,16 @@ function renderQ(){
 // ── 拼字磚：點字母排進格子，不用鍵盤（小三英打太慢會變成打字練習）──
 function renderSpell(item, head){
   const w=item.w, letters=w.w.split("");
-  const tiles=shuffle(letters.concat(extraLetters(w.w, w.w.length<=4?3:4)));
+  // 多字詞（potato chips、post office）的空格畫成空隙、不做成磚塊 ——
+  // 否則小孩得從一堆字母裡猜哪一顆是「空白」，那不是拼字練習。
+  const spellLetters=letters.filter(c=>c!==" ");
+  const plain=w.w.replace(/ /g,"");
+  const tiles=shuffle(spellLetters.concat(extraLetters(plain, plain.length<=4?3:4)));
   let filled=[];
   elView.innerHTML=`<div class="card block">${head}
     <div class="q-prompt">🧱 把這個字拼出來</div>
     <div class="spellhint"><button class="minispk" id="spk">🔊</button><span class="zh-big">${esc(w.zh)}</span></div>
-    <div class="slots" id="slots">${letters.map(()=>'<span class="slot"></span>').join("")}</div>
+    <div class="slots" id="slots">${letters.map(c=>c===" "?'<span class="slotgap"></span>':'<span class="slot"></span>').join("")}</div>
     <div class="tiles" id="tiles">${tiles.map((t,i)=>`<button class="tile block" data-i="${i}">${esc(t)}</button>`).join("")}</div>
     <div class="navrow">
       <button class="btn btn-wood" id="del">⌫ 退一格</button>
@@ -1782,15 +1843,15 @@ function renderSpell(item, head){
   setTimeout(()=>speak(w.w), 350);
   function paint(){ slotEls.forEach((s,i)=>{ s.textContent=filled[i]?filled[i].ch:""; s.classList.toggle("has",!!filled[i]); }); }
   function check(){
-    if(filled.length<letters.length) return;
+    if(filled.length<spellLetters.length) return;
     const got=filled.map(f=>f.ch).join("");
-    const right=got===w.w;
+    const right=got===plain;
     tileEls.forEach(t=>t.disabled=true);
     slotEls.forEach(s=>s.classList.add(right?"right":"wrong"));
     answer(item, right);
   }
   tileEls.forEach(t=>t.onclick=()=>{
-    if(filled.length>=letters.length) return;
+    if(filled.length>=spellLetters.length) return;
     sPlace(); t.disabled=true; t.classList.add("used");
     filled.push({ch:t.textContent, el:t}); paint(); check();
   });
@@ -1827,7 +1888,7 @@ function renderFix(item){
     <div class="q-prompt">📦 這個字進你的單字寶箱了</div>
     <div class="word-big" id="fw">${esc(w.w)}</div>
     ${chunkState(w)==="sight" ? SIGHT_HTML
-      : chunkState(w)==="chunks" ? `<div class="chunks" id="fc">${esc(w.chunks)}</div>` : ""}
+      : chunkState(w)==="chunks" ? `<div class="chunks" id="fc">${chunkHTML(w)}</div>` : ""}
     <div class="zh-big">${esc(w.zh)}</div>
     <div class="fixhint">點上面的字可以再聽一次${chunkState(w)==="chunks"?"，點下面那行會一塊一塊唸給你聽":""}</div>
     <div class="navrow"><button class="btn btn-grass" id="go">知道了 ✅</button></div></div>`;
@@ -2215,16 +2276,16 @@ function viewHelp(){
   elView.innerHTML=`<div class="card block" style="text-align:left">
     <div class="q-prompt">❓ 怎麼玩</div>
     <div class="helpsec"><b>每天就照首頁那三格做，20 分鐘。</b></div>
-    <div class="helpsec"><b>① 複習昨天的 5 個字（3 分鐘）</b><div class="ds">
+    <div class="helpsec"><b>① 複習以前學過的字（3 分鐘）</b><div class="ds">
       只給你圖和中文，英文先蓋起來。<b>自己先想</b>，想好了再翻答案。
       想不出來的字不用難過，那就是今天要多練的字。</div></div>
-    <div class="helpsec"><b>② 今天的 5 個新字（15 分鐘）</b><div class="ds">
+    <div class="helpsec"><b>② 今天的新字（15 分鐘）</b><div class="ds">
       <b>聽</b> 3 次不看字 → <b>說</b> 出來 → <b>看</b> 圖 → <b>拆</b> 成音塊 → <b>寫</b> 進練習本。順序不要換。<br>
-      每天就是這 5 個字，<b>5 個都要寫</b>，不是只寫不會的。
+      今天單元有幾個字就寫幾個，<b>每個都要寫</b>，不是只寫不會的。
       每個字寫 5 次：前 2 次看著抄（同時唸出來），後 3 次<b>把字蓋起來自己寫</b>。
       蓋起來想出來的那一次，才是真正記住的那一次。</div></div>
     <div class="helpsec"><b>③ 蓋起來默寫（2 分鐘）</b><div class="ds">
-      看中文，把 5 個字默寫在練習本上，寫完再翻答案對一對。
+      看中文，把今天的字默寫在練習本上，寫完再翻答案對一對。
       寫錯的字圈起來，明天第 ① 格會先練到它。</div></div>
     <div class="helpsec"><b>答錯不用怕</b><div class="ds">
       沒記得的字會自動進「單字寶箱」，之後優先出現。答對三次它才會變成 💎。</div></div>

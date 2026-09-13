@@ -1,4 +1,4 @@
-const CACHE = "ewq-v10a";
+const CACHE = "ewq-v13";   // 內建發音音檔（audio/）。改 index.html、words.js 或音檔就要動這行
 const ASSETS = ["./", "index.html", "data/words.js", "manifest.webmanifest", "icon-192.png", "icon-512.png", "apple-touch-icon.png"];
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).catch(()=>{}));
@@ -9,10 +9,10 @@ self.addEventListener("activate", e => {
   self.clients.claim();
 });
 self.addEventListener("fetch", e => {
-  // 單字圖片不進 install 的 ASSETS —— 任何一張 404 都會讓整個安裝失敗。
+  // 單字圖片與發音音檔不進 install 的 ASSETS —— 任何一個 404 都會讓整個安裝失敗。
   // 改成第一次用到才抓，抓到就存起來，之後離線也看得到。
   // 老師現場加的字，圖來自 ARASAAC 的 CDN（不在 /img/ 底下），也要快取才能離線用
-  if (e.request.url.includes("/img/") || e.request.url.includes("static.arasaac.org")) {
+  if (e.request.url.includes("/img/") || e.request.url.includes("/audio/") || e.request.url.includes("static.arasaac.org")) {
     e.respondWith(
       caches.match(e.request).then(r => r || fetch(e.request).then(res => {
         // ⚠️ 跨網域的 <img> 是 no-cors 請求，回來的是 opaque response：
