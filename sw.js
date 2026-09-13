@@ -1,4 +1,4 @@
-const CACHE = "ewq-v14";   // 首頁第2格改進單元頁＋每頁上一頁鍵。改 index.html、words.js 或音檔就要動這行
+const CACHE = "ewq-v15";   // 商店上線＋五個全身特效。改 index.html、words.js 或音檔就要動這行
 const ASSETS = ["./", "index.html", "data/words.js", "manifest.webmanifest", "icon-192.png", "icon-512.png", "apple-touch-icon.png"];
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).catch(()=>{}));
