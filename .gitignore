@@ -6,3 +6,6 @@ __pycache__/
 人聲比較.html
 voice-test/
 校對確認.html
+獎勵解鎖表.html
+manual/node_modules/
+manual/package*.json

@@ -567,6 +567,7 @@ details.patbox:not([open]) > :not(summary){display:none !important;}
   <header class="bar">
     <h1>🗺️ 單字大冒險</h1>
     <span class="sp"></span>
+    <button class="iconbtn" id="btnBack" title="上一頁" hidden>←</button>
     <span class="pill" id="crumb">選單元</span>
     <button class="iconbtn on" id="btnVoice" title="發音">🔊</button>
     <button class="iconbtn on" id="btnSound" title="音效">🎵</button>
@@ -1049,7 +1050,7 @@ function viewHome(){
         f.review ? `記得 ${f.review.ok}／${f.review.n}` : `以前學過的字，蓋起來想想看（${bank.length} 個）`, "3 分鐘")
     : cardHTML(1, "dim", "複習單字庫的舊字", "單字庫還沒有舊字，直接從 ② 開始", "3 分鐘");
   const s2 = cardHTML(2, step2Done?"done":((bank.length&&!f.review)?"":"now"), `今天紙本要寫的 ${wAll} 個字`,
-        `${tu.title} ‧ 對照著抄進練習本 ‧ 寫好 ${wDone}／${wAll}`, "15 分鐘");
+        `${tu.title} ‧ 先聽發音，再抄進練習本 ‧ 寫好 ${wDone}／${wAll}`, "15 分鐘");
   const s3 = cardHTML(3, f.dict?"done":(step2Done?"now":"dim"), "蓋起來默寫",
         f.dict ? `${doneTitle(f.dict, tu.title)} ‧ 對了 ${f.dict.ok}／${f.dict.n}` : (step2Done?"看中文，把今天的字寫在練習本上":"建議先做完 ②"), "2 分鐘");
 
@@ -1074,7 +1075,10 @@ function viewHome(){
     sPlace();
     const n=c.dataset.step;
     if(n==="1"){ startBankReview(dailyReviewPool()); }
-    else if(n==="2"){ S.uid=tu.id; viewWrite(tu.id); }   // App 不教新字，直接開抄寫單當對照表
+    // 太一 2026-09-13：第 2 格改成進「單元頁」，不要直接跳抄寫單 ——
+    // 一開始就看到字等於跳過「先用耳朵聽」那一步，孩子會直接照著描。
+    // 單元頁的第一顆按鈕就是「學新字（聽說看拆）」，順序才對。
+    else if(n==="2"){ S.uid=tu.id; viewUnit(); }
     else { startRecall(tu.id,"dict"); }
   });
   // 單元 id 是日期字串（"2026-09-04"），不能用 + 轉數字，會變成 NaN
@@ -1562,10 +1566,18 @@ function renderLearn(){
       if(ck) ck.onclick=()=>{ sClick(); speakChunks(w); };
       document.getElementById("wordBig").onclick=()=>{ sClick(); speak(w.w); };
       document.getElementById("again").onclick=()=>{ sClick(); speak(w.w); };
-      document.getElementById("next").onclick=()=>{
+      const nextBtn=document.getElementById("next");
+      nextBtn.onclick=()=>{
+        // ⚠️ XP 只給第一次學這個字。原本每按一次就 +2，同一個字連按就能一直刷
+        //    （太一 2026-09-13 抓到）。隔壁「寫好了」本來就有 rec.done 擋，這顆漏了。
+        if(nextBtn.disabled) return;
+        nextBtn.disabled=true;                       // 連點兩下也只算一次
         const k=keyOf(u.id,w.w);
-        if(!store.seen[k]){ store.seen[k]=1; dailyProgress("seen"); }
-        saveStore(); addXP(2); sOk(); buddyReact('happy');
+        if(!store.seen[k]){
+          store.seen[k]=1; dailyProgress("seen");
+          addXP(2); rewardPop("+2 XP");
+        }
+        saveStore(); sOk(); buddyReact('happy');
         if(learnedCount()>=50) unlock("learn50");
         L.idx++; renderLearn();
       };
@@ -2291,18 +2303,78 @@ function viewHelp(){
       沒記得的字會自動進「單字寶箱」，之後優先出現。答對三次它才會變成 💎。</div></div>
     <div class="helpsec"><b>還想多練</b><div class="ds">
       進單元裡有「🧱 拼字磚」，點字母把字拼出來。做完上面三格再玩。</div></div>
-    <div class="helpsec" style="opacity:.7;font-size:12px;margin-top:14px">
-      單字圖片來源：<b>ARASAAC</b>（arasaac.org），授權 CC BY-NC-SA，
-      由 Gobierno de Aragón 提供，作者 Sergio Palao。</div>
+    <!-- CC BY-NC-SA 的 BY＝姓名標示，跟有沒有營利無關（NC 只管商業使用那一段）。
+         這個 App 放在公開的 GitHub Pages 上等於公開散布，這行不能拿掉，但可以低調。 -->
+    <div class="helpsec" style="opacity:.45;font-size:10px;margin-top:16px">
+      圖片：ARASAAC（Sergio Palao／Gobierno de Aragón）CC BY-NC-SA</div>
     <div class="navrow"><button class="btn btn-stone" id="home">🏠 回首頁</button></div></div>`;
   document.getElementById("home").onclick=()=>{ sClick(); viewHome(); };
+}
+
+// ====== 上一頁（每一頁都有）======
+// 太一 2026-09-13：小孩常常點進某一頁就出不來，只能按「回首頁」從頭再走一次。
+// 做法：把「整頁切換」的那幾個 view 函式包一層，記下走過的路；頂列的 ← 按鈕往回退一步。
+// 只記整頁切換，不記闖關途中的每一題 —— 題目中間按上一頁應該是回單元頁，不是回上一題。
+const NAV=[];
+let navBack=false;
+let inSub=false;        // 現在在闖關畫面（學新字／默寫／拼字磚）裡面嗎
+function wrapNav(name){
+  const fn=window[name];
+  if(typeof fn!=="function") return;
+  window[name]=function(...a){
+    inSub=false;
+    if(!navBack){
+      const sig=name+"|"+JSON.stringify(a)+"|"+(S&&S.uid||"");
+      const top=NAV[NAV.length-1];
+      if(!top || top.sig!==sig){ NAV.push({sig,name,args:a,uid:S&&S.uid}); }
+      if(NAV.length>30) NAV.shift();
+    }
+    const r=fn.apply(this,a);
+    renderBack();
+    return r;
+  };
+}
+["viewHome","viewUnit","viewWrite","viewWordList","viewStats","viewClass",
+ "viewExamLog","viewBackup","viewTeacher","viewHelp"].forEach(wrapNav);
+// 闖關畫面不進歷史 —— 在題目中間按上一頁，應該回到單元頁，而不是退回上一題
+function wrapSub(name){
+  const fn=window[name];
+  if(typeof fn!=="function") return;
+  window[name]=function(...a){ inSub=true; const r=fn.apply(this,a); renderBack(); return r; };
+}
+["renderLearn","renderLearnDone","renderRecall","renderRecallDone",
+ "renderQ","renderSpell","renderFix","renderQuizDone","renderExamDone"].forEach(wrapSub);
+function renderBack(){
+  const b=document.getElementById("btnBack"); if(!b) return;
+  b.hidden = !(inSub || NAV.length>1);     // 首頁沒有上一頁
+}
+function goBack(){
+  // 在闖關畫面裡 → 回到上一個整頁（通常是單元頁），不要退回上一題
+  if(inSub){
+    const cur=NAV[NAV.length-1]; if(!cur) return;
+    S.q=null; S.rc=null;                    // 離開闖關，順手清掉題目狀態
+    navBack=true;
+    try{ if(cur.uid!=null) S.uid=cur.uid; window[cur.name].apply(null, cur.args); }
+    finally { navBack=false; }
+    return;
+  }
+  if(NAV.length<2) return;
+  NAV.pop();                                // 丟掉現在這頁
+  const prev=NAV[NAV.length-1];
+  navBack=true;
+  try{
+    if(prev.uid!==undefined && prev.uid!==null) S.uid=prev.uid;
+    window[prev.name].apply(null, prev.args);
+  } finally { navBack=false; }
+  renderBack();
 }
 
 // ====== 啟動 ======
 function hideLoading(){ const l=document.getElementById("loading"); if(l){ l.classList.add("gone"); setTimeout(()=>l.remove(),600);} }
 document.getElementById("btnVoice").onclick=function(){ store.opt.voice=!store.opt.voice; saveStore(); this.classList.toggle("on",store.opt.voice); };
 document.getElementById("btnSound").onclick=function(){ store.opt.sound=!store.opt.sound; saveStore(); this.classList.toggle("on",store.opt.sound); };
-document.getElementById("btnHome").onclick=()=>{ sClick(); viewHome(); };
+document.getElementById("btnHome").onclick=()=>{ sClick(); NAV.length=0; viewHome(); };
+document.getElementById("btnBack").onclick=()=>{ sClick(); goBack(); };
 document.getElementById("unlockClose").onclick=()=>{ sClick(); document.getElementById("unlockModal").classList.remove("show"); };
 document.getElementById("btnVoice").classList.toggle("on",!!store.opt.voice);
 document.getElementById("btnSound").classList.toggle("on",!!store.opt.sound);
