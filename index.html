@@ -617,7 +617,7 @@ details.patbox:not([open]) > :not(summary){display:none !important;}
 <script>
 "use strict";
 const DATA = window.EN_WORDS || {units:[]};
-const APP_VER = "v10｜2026.09.12 紙本學新字／App複習舊字＋備份還原";
+const APP_VER = "v11｜2026.09.19 翻答案／安卓發音修復／一三五日排程";
 const LS_KEY = "ewq_state_v1";
 let store = loadStore();
 function loadStore(){ try{return JSON.parse(localStorage.getItem(LS_KEY))||{}}catch(e){return {}} }
@@ -713,18 +713,19 @@ function parseWordLines(text){
   }).filter(Boolean);
 }
 
-// ── 日期：提案是週一到週五，所以排課要跳過週末 ──────────────────
+// ── 日期：上課日 2026-09-21 起改成「週一 / 三 / 五 / 日」 ────────────
+// 原本是週一到週五。家長反映週二、四放學後時間不夠，拿掉那兩天、補一天週日。
 const WD_NAME=["星期日","星期一","星期二","星期三","星期四","星期五","星期六"];
 function dateAdd(key, n){
   const [y,m,d]=key.split("-").map(Number);
   return new Date(y, m-1, d+n).toLocaleDateString("en-CA");
 }
-function isWeekend(key){
+const STUDY_WD=[0,1,3,5];          // 星期日 / 一 / 三 / 五
+function isStudyDay(key){
   const [y,m,d]=key.split("-").map(Number);
-  const w=new Date(y, m-1, d).getDay();
-  return w===0 || w===6;
+  return STUDY_WD.indexOf(new Date(y, m-1, d).getDay()) >= 0;
 }
-function nextWeekday(key){ let k=key; let guard=0; while(isWeekend(k) && guard++<7) k=dateAdd(k,1); return k; }
+function nextStudyDay(key){ let k=key, guard=0; while(!isStudyDay(k) && guard++<9) k=dateAdd(k,1); return k; }
 function weekStart(key){                       // 該日期所在那一週的星期一
   const [y,m,d]=key.split("-").map(Number);
   const wd=(new Date(y, m-1, d).getDay()+6)%7; // 週一=0
@@ -813,20 +814,31 @@ document.addEventListener("touchmove", e=>{
 //   ② 語調會飄（唸孤立單字時像句子講到一半），而且沒辦法從網頁修
 //   ③ 音檔可以離線播，SW 會跟著快取
 // 老師現場加的字沒有音檔，播放失敗時自動退回瀏覽器語音，所以下面的 TTS 版本要留著。
-let curClip=null;
-function stopClip(){ if(curClip){ try{ curClip.pause(); }catch(e){} curClip=null; } }
+// ⚠️ 只用「一個」Audio 元素反覆換 src。
+// 2026-09-19 安卓平板實況：按久了單字就不出聲，但點擊音效還在。
+// 原因是舊版每唸一次就 new Audio() 且從不釋放，Android Chrome 對同時存在的
+// media element 有數量上限，撐爆之後 play() 會靜默失敗——不丟錯，所以連
+// onerror→TTS 的退路都不會觸發。音效走 Web Audio（另一條路）才會活著。
+let clipEl=null, clipToken=0;
+function getClipEl(){ if(!clipEl){ clipEl=new Audio(); clipEl.preload="auto"; } return clipEl; }
+function stopClip(){ clipToken++; if(clipEl){ try{ clipEl.pause(); }catch(e){} clipEl.onended=null; clipEl.onerror=null; } }
 function clipURL(w){ return "audio/"+encodeURIComponent(w)+".mp3"; }
 // 依序播一串音檔；任何一段失敗就整串放棄、走 fallback（不會播到一半沒聲音）
 function playClips(urls, onFail){
   stopClip();
+  const a=getClipEl(), mine=clipToken;   // mine：換新序列後舊的 callback 直接作廢
   let i=0;
   const next=()=>{
-    if(i>=urls.length){ curClip=null; return; }
-    const a=new Audio(urls[i++]);
-    curClip=a;
+    if(mine!==clipToken) return;
+    if(i>=urls.length) return;
     a.onended=next;
-    a.onerror=()=>{ curClip=null; if(onFail) onFail(); };
-    a.play().catch(()=>{ curClip=null; if(onFail) onFail(); });
+    a.onerror=()=>{ if(mine===clipToken && onFail) onFail(); };
+    a.src=urls[i++];
+    a.play().catch(err=>{
+      // AbortError＝被下一次 src/play 打斷，不是真的播不出來，不能誤觸發 TTS 退路
+      if(err && err.name==="AbortError") return;
+      if(mine===clipToken && onFail) onFail();
+    });
   };
   next();
 }
@@ -1175,10 +1187,14 @@ function writeDoneOf(uid){
   const rec=writeRec(uid);
   return u.words.filter(w=>rec.done[w.w]).length;
 }
-// 今天有單元就用今天的；沒有就用第一個還沒寫完的
+// 今天有單元就用今天的；沒有（例如今天不是上課日）就往回找「最近一次上課日」。
+// 2026-09-19 修：原本 fallback 是「第一個還沒寫完的」，會從最舊的開始撈，
+// 週六一開 app 就抓到 9/12 那個 CS3 舊單元（只有 5 個字），今日任務②於是顯示 /5。
 function todayUnit(){
   const t=todayKey();
-  return unitById(t) || allUnits().find(u=>writeDoneOf(u.id) < u.words.length) || allUnits()[0];
+  const hit=unitById(t); if(hit) return hit;
+  const past=allUnits().filter(u=>u.id<=t).sort((a,b)=>b.id.localeCompare(a.id)); // 新→舊
+  return past.find(u=>writeDoneOf(u.id) < u.words.length) || past[0] || allUnits()[0];
 }
 
 function viewWrite(uid){
@@ -1920,6 +1936,7 @@ function renderSpell(item, head){
     <div class="slots" id="slots">${letters.map(c=>c===" "?'<span class="slotgap"></span>':'<span class="slot"></span>').join("")}</div>
     <div class="tiles" id="tiles">${tiles.map((t,i)=>`<button class="tile block" data-i="${i}">${esc(t)}</button>`).join("")}</div>
     <div class="navrow">
+      <button class="btn btn-diamond" id="reveal">翻答案 👀</button>
       <button class="btn btn-wood" id="del">⌫ 退一格</button>
       <button class="btn btn-stone" id="stop">結束闖關</button>
     </div></div>`;
@@ -1928,13 +1945,25 @@ function renderSpell(item, head){
   document.getElementById("spk").onclick=()=>{ sClick(); speak(w.w); };
   setTimeout(()=>speak(w.w), 350);
   function paint(){ slotEls.forEach((s,i)=>{ s.textContent=filled[i]?filled[i].ch:""; s.classList.toggle("has",!!filled[i]); }); }
+  let settled=false;                       // 已判分（拼完或翻答案），防止重複觸發
   function check(){
-    if(filled.length<spellLetters.length) return;
+    if(settled || filled.length<spellLetters.length) return;
     const got=filled.map(f=>f.ch).join("");
     const right=got===plain;
+    settled=true;
     tileEls.forEach(t=>t.disabled=true);
     slotEls.forEach(s=>s.classList.add(right?"right":"wrong"));
     answer(item, right);
+  }
+  // 拼不出來時的出口。2026-09-19 太一上課發現：卡住只能按「結束闖關」整輪跳掉，
+  // 那個字反而不會進單字寶箱——最需要練的字被漏掉。改成跟默寫一樣可以翻答案，
+  // 直接算錯，走 answer(false) → 進寶箱 → 訂正卡。
+  function reveal(){
+    if(settled) return;
+    settled=true; sClick();
+    tileEls.forEach(t=>t.disabled=true);
+    slotEls.forEach((s,i)=>{ s.textContent=spellLetters[i]; s.classList.add("has","wrong"); });
+    answer(item, false);
   }
   tileEls.forEach(t=>t.onclick=()=>{
     if(filled.length>=spellLetters.length) return;
@@ -1945,6 +1974,7 @@ function renderSpell(item, head){
     const last=filled.pop(); if(!last) return; sClick();
     last.el.disabled=false; last.el.classList.remove("used"); paint();
   };
+  document.getElementById("reveal").onclick=reveal;
   document.getElementById("stop").onclick=()=>renderQuizDone();
 }
 // ── 判分＋Leitner 移盒；答錯一律走「訂正卡」（再聽一次＋看音塊）──
@@ -2239,7 +2269,7 @@ function viewBackup(){
 // 加的字存在 TW_KEY，跟進度分開，「清除全部紀錄」不會把它清掉。
 function viewTeacher(){
   crumb("老師：加單字");
-  S.tw = S.tw || {start:nextWeekday(todayKey()), rows:[]};
+  S.tw = S.tw || {start:nextStudyDay(todayKey()), rows:[]};
   const T=S.tw;
   const rowsHTML = T.rows.map((r,i)=>`
     <div class="twrow" data-i="${i}">
@@ -2255,7 +2285,7 @@ function viewTeacher(){
     <div class="q-prompt">👩‍🏫 老師：加單字</div>
     <div class="twhint">一行一個字，最少「<b>英文 中文</b>」。要更精確可以加詞性和音塊，順序不拘：<br>
       <code>paper 紙 n. pa-per</code><br>
-      每 <b>5 個字排一天</b>，自動跳過週末。音塊留空不會怎樣，只是那個字不教怎麼拆。</div>
+      每 <b>8 個字排一天</b>，只排上課日（週一 / 三 / 五 / 日）。</div>
     <div style="margin:10px 0">從哪一天開始：
       <input type="date" class="twdate" id="twStart" value="${esc(T.start)}"></div>
     <textarea class="twta" id="twText" placeholder="plant 植物&#10;paper 紙 n. pa-per&#10;recycle 回收 v.">${esc(T.raw||"")}</textarea>
@@ -2323,11 +2353,11 @@ function viewTeacher(){
     localStorage.removeItem(TW_KEY); S.tw=null; viewTeacher();
   };
 
-  // 每 5 個字排一天，跳過週末
+  // 每 8 個字排一天，只排上課日（週一/三/五/日）
   function assignDays(){
-    let day=nextWeekday(T.start);
+    let day=nextStudyDay(T.start);
     T.rows.forEach((r,i)=>{
-      if(i>0 && i%5===0) day=nextWeekday(dateAdd(day,1));
+      if(i>0 && i%8===0) day=nextStudyDay(dateAdd(day,1));
       r.uid=day; r.day=unitLabel(day).title;
     });
   }
@@ -2499,6 +2529,26 @@ function wrapSub(name){
 function renderBack(){
   const b=document.getElementById("btnBack"); if(!b) return;
   b.hidden = !(inSub || NAV.length>1);     // 首頁沒有上一頁
+  injectInlineBack();
+}
+// 太一 2026-09-19：頂列那顆 ← 太小又離內容遠，小孩找不到。在每一頁的
+// 「🏠 回首頁」左邊再放一顆一樣大的「← 上一頁」（頂列那顆保留）。
+// 用注入的方式而不是改每一個 view 的樣板 —— 回首頁按鈕散在十幾處，漏一個就不一致。
+function injectInlineBack(){
+  const v=document.getElementById("view"); if(!v) return;
+  const show = inSub || NAV.length>1;
+  if(!show){ v.querySelectorAll(".inlineback").forEach(b=>b.remove()); return; }
+  // 「回首頁」按鈕不是只出現在 .navrow（單元頁在 .home-sec），所以掃全部按鈕比對文字
+  [...v.querySelectorAll("button")].forEach(home=>{
+    if(home.classList.contains("inlineback")) return;
+    if(home.textContent.indexOf("回首頁")<0) return;
+    const par=home.parentNode; if(!par || par.querySelector(":scope > .inlineback")) return;
+    const b=document.createElement("button");
+    b.className=home.className+" inlineback";   // 跟旁邊那顆長一樣
+    b.textContent="← 上一頁";
+    b.onclick=()=>{ sClick(); goBack(); };
+    par.insertBefore(b, home);
+  });
 }
 function goBack(){
   // 在闖關畫面裡 → 回到上一個整頁（通常是單元頁），不要退回上一題

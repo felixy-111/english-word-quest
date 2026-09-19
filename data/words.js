@@ -1,6 +1,8 @@
 // 單字大冒險 ── 單字資料
 //
-// 單元＝日期，一天固定 8 個字（太一 2026-09-12 指定），只排平日、跳過週末。
+// 單元＝日期，一天固定 8 個字（太一 2026-09-12 指定）。
+// 2026-09-21 起上課日改成「週一 / 三 / 五 / 日」——家長反映週二、四時間不夠，
+// 拿掉那兩天、補一天週日，原本的內容依序往後遞延（太一 2026-09-19）。
 // 欄位：w 英文｜pos 詞性｜zh 中文｜emoji 備援圖示｜chunks 音塊｜anim 微動效
 //
 // 圖片：img/<單字>.png，由 fetch_images.py 從 ARASAAC 抓下來（CC BY-NC-SA）。
@@ -18,7 +20,7 @@
 // 老師上課現場加的字走 App 裡的「👩‍🏫 老師：加單字」，存在裝置的 localStorage，
 // 匯出後再灌進這個檔才會跟著上線給孩子。
 window.EN_WORDS = {
-  version: "cs3+m1-2026-09-12",
+  version: "cs3+m1-2026-09-19",
   units: [
     // 來源：安親班 CS3（9/7，Lily 老師）指定的拼字考單字。主題 Save the Earth。
     { id:"2026-09-12", title:"9 / 12", sub:"星期六", words:[
@@ -126,7 +128,7 @@ window.EN_WORDS = {
     ]},
 
     // Unit 3 L4 Illnesses ＋ Unit 4 L1 Family
-    { id:"2026-09-22", title:"9 / 22", sub:"星期二 · U3 生病 · U4 家人", words:[
+    { id:"2026-09-23", title:"9 / 23", sub:"星期三 · U3 生病 · U4 家人", words:[
       // 課本 L4 教的是生病，但 cold 更常用的是「冷的」，兩個意思都給。
       {w:"cold",         pos:"n./adj.", zh:"感冒；冷的", emoji:"🤧", chunks:"c-old"},
       {w:"fever",        pos:"n.", zh:"發燒",       emoji:"🌡️", chunks:"fe-ver"},
@@ -140,7 +142,7 @@ window.EN_WORDS = {
     ]},
 
     // Unit 4 Getting Together：L1 剩下 ＋ L2 Things on the Table ＋ L4 第一國
-    { id:"2026-09-23", title:"9 / 23", sub:"星期三 · U4 餐桌上的東西", words:[
+    { id:"2026-09-25", title:"9 / 25", sub:"星期五 · U4 餐桌上的東西", words:[
       // ou 在這裡唸 /ʌ/（跟 could／house 都不同），例外，老師要示範。
       {w:"cousin", pos:"n.", zh:"表（堂）兄弟姊妹", emoji:"👦", chunks:"cou-sin"},
       {w:"fork",   pos:"n.", zh:"叉子",             emoji:"🍴", chunks:"f-ork"},
@@ -154,7 +156,7 @@ window.EN_WORDS = {
     ]},
 
     // Unit 4 L4 Countries 剩下 ＋ Unit 5 L1 Adjectives
-    { id:"2026-09-24", title:"9 / 24", sub:"星期四 · U4 國家 · U5 形容詞", words:[
+    { id:"2026-09-27", title:"9 / 27", sub:"星期日 · U4 國家 · U5 形容詞", words:[
       {w:"Japan",   pos:"n.",   zh:"日本",         emoji:"🇯🇵", chunks:"Ja-pan"},
       {w:"Russia",  pos:"n.",   zh:"俄羅斯",       emoji:"🇷🇺", chunks:"Rus-sia"},
       // Türkiye 是土耳其 2022 年起的正式國名寫法，課本用這個拼法，ü 上面兩點不能省。
@@ -167,7 +169,7 @@ window.EN_WORDS = {
     ]},
 
     // Unit 5：L1 剩下 ＋ 人物 ＋ L2 Adjectives 開頭
-    { id:"2026-09-25", title:"9 / 25", sub:"星期五 · U5 人物與形容詞", words:[
+    { id:"2026-09-28", title:"9 / 28", sub:"星期一 · U5 人物與形容詞", words:[
       {w:"slow",  pos:"adj.", zh:"慢的",       emoji:"🐢", chunks:"sl-ow"},
       {w:"man",   pos:"n.",   zh:"男人",       emoji:"👨", chunks:"m-an"},
       {w:"woman", pos:"n.",   zh:"女人",       emoji:"👩", chunks:"wom-an"},
@@ -181,7 +183,7 @@ window.EN_WORDS = {
     ]},
 
     // Unit 5：L2 剩下 ＋ L4 Adjectives（科學）＋ 寫作本 U1 味道
-    { id:"2026-09-28", title:"9 / 28", sub:"星期一 · U5 形容詞 · 寫作本味道", words:[
+    { id:"2026-09-30", title:"9 / 30", sub:"星期三 · U5 形容詞 · 寫作本味道", words:[
       {w:"dirty", pos:"adj.", zh:"髒的",   emoji:"🧦", chunks:"dir-ty"},
       {w:"baggy", pos:"adj.", zh:"寬鬆的", emoji:"👖", chunks:"bag-gy"},
       {w:"tight", pos:"adj.", zh:"緊的",   emoji:"👖", chunks:"t-ight"},
@@ -193,7 +195,7 @@ window.EN_WORDS = {
     ]},
 
     // 寫作本 Seedlings U1 My Strange Pizza（味道）＋ U3 A Messy Bedroom 開頭
-    { id:"2026-09-29", title:"9 / 29", sub:"星期二 · 寫作本 味道與房間", words:[
+    { id:"2026-10-02", title:"10 / 2", sub:"星期五 · 寫作本 味道與房間", words:[
       {w:"sour",   pos:"adj.", zh:"酸的",   emoji:"🍋", chunks:"s-our"},
       {w:"salty",  pos:"adj.", zh:"鹹的",   emoji:"🧂", chunks:"salt-y"},
       {w:"bitter", pos:"adj.", zh:"苦的",   emoji:"🍫", chunks:"bit-ter"},
@@ -205,7 +207,7 @@ window.EN_WORDS = {
     ]},
 
     // 寫作本 U3 剩下 ＋ U2 Weekly Activities（片語只收關鍵字）
-    { id:"2026-09-30", title:"9 / 30", sub:"星期三 · 寫作本 房間與每週活動", words:[
+    { id:"2026-10-04", title:"10 / 4", sub:"星期日 · 寫作本 房間與每週活動", words:[
       {w:"dresser",    pos:"n.", zh:"五斗櫃", emoji:"🗄️", chunks:"dress-er"},
       {w:"bookcase",   pos:"n.", zh:"書櫃",   emoji:"📚", chunks:"book-case"},
       {w:"mirror",     pos:"n.", zh:"鏡子",   emoji:"🪞", chunks:"mir-ror"},
