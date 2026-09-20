@@ -617,7 +617,7 @@ details.patbox:not([open]) > :not(summary){display:none !important;}
 <script>
 "use strict";
 const DATA = window.EN_WORDS || {units:[]};
-const APP_VER = "v11｜2026.09.19 翻答案／安卓發音修復／一三五日排程";
+const APP_VER = "v12｜2026.09.20 修更新抓不到新版／檢查更新按鈕／木劍方向";
 const LS_KEY = "ewq_state_v1";
 let store = loadStore();
 function loadStore(){ try{return JSON.parse(localStorage.getItem(LS_KEY))||{}}catch(e){return {}} }
@@ -1299,8 +1299,10 @@ function viewWordList(){
 
 // ====== 角色與生物（全自製像素，非 Minecraft 官方美術）======
 const GEAR=[
+  // 2026-09-20 太一：原本上下顛倒，穿上去像握劍身。整把翻轉成刃朝上、柄在下，
+  // 握把落在 y≈11～13 —— 跟火把木棍的握持高度一致。
   {key:"sword",  slot:"hand", name:"木劍",     price:50,  pv:"11 0.5 7 13",
-    draw:()=>'<rect x="13.8" y="3.6" width="1.6" height="8.4" fill="#bb8a52"/><rect x="12.6" y="2.6" width="4" height="1.8" fill="#8a6238"/><rect x="14.1" y="1" width="1" height="1.8" fill="#bb8a52"/>'},
+    draw:()=>'<rect x="13.8" y="2" width="1.6" height="8.4" fill="#bb8a52"/><rect x="12.6" y="9.6" width="4" height="1.8" fill="#8a6238"/><rect x="14.1" y="11.2" width="1" height="1.8" fill="#bb8a52"/>'},
   {key:"torch",  slot:"hand", name:"火把",     price:120, pv:"12 -0.5 6 14.5",
     draw:()=>'<rect x="14" y="4.6" width="1.6" height="8.4" fill="#8a6238"/><rect x="13.2" y="1.8" width="3.2" height="3" fill="#ff9a3d"/><rect x="13.9" y="0.4" width="1.8" height="1.8" fill="#ffe066"/>'},
   {key:"balloon",slot:"hand", name:"氣球",     price:200, pv:"12 -3 7 16.5",
@@ -2072,11 +2074,13 @@ function viewStats(){
       <button class="btn btn-wood" id="teach">👩‍🏫 老師：加單字</button></div>
     <div class="navrow"><button class="btn btn-stone" id="home">🏠 回首頁</button>
       <button class="btn btn-red" id="reset">清除全部紀錄</button></div>
+    <div class="navrow"><button class="btn btn-stone" id="chkUpd">🔄 檢查更新</button></div>
     <div class="hint">版本 ${APP_VER}</div></div>`;
   elView.querySelectorAll(".wchip").forEach(b=>b.onclick=()=>{ sClick(); speak(b.dataset.w); });
   document.getElementById("home").onclick=()=>{ sClick(); viewHome(); };
   document.getElementById("goShop").onclick=()=>{ sPlace(); viewShop(); };
   document.getElementById("teach").onclick=()=>{ sClick(); viewTeacher(); };
+  document.getElementById("chkUpd").onclick=()=>{ sClick(); checkUpdate(); };
   document.getElementById("reset").onclick=()=>{
     if(!confirm("確定要把所有進度（等級、金幣、單字寶箱）清掉嗎？\n\n沒辦法復原。如果還沒備份，先去「老師：加單字 → 備份／還原」做一份。")) return;
     localStorage.removeItem(LS_KEY); location.reload();

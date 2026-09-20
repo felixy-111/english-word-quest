@@ -1,7 +1,13 @@
-const CACHE = "ewq-v16";   // 商店上線＋五個全身特效。改 index.html、words.js 或音檔就要動這行
+const CACHE = "ewq-v17";   // 商店上線＋五個全身特效。改 index.html、words.js 或音檔就要動這行
 const ASSETS = ["./", "index.html", "data/words.js", "manifest.webmanifest", "icon-192.png", "icon-512.png", "apple-touch-icon.png"];
 self.addEventListener("install", e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).catch(()=>{}));
+  // cache:"reload" 強制繞過瀏覽器 HTTP 快取。不加的話 addAll 可能撈到快取裡的
+  // 舊檔案，結果「CACHE 版號換了、裡面裝的還是舊 index.html」，使用者永遠更新不到。
+  // GitHub Pages 目前的 header 沒踩到，但本機 python http.server 一測就中——
+  // 代表這個寫法是靠伺服器 header 撐著的，補上比較保險。（2026-09-20）
+  e.waitUntil(caches.open(CACHE)
+    .then(c => c.addAll(ASSETS.map(u => new Request(u, {cache:"reload"}))))
+    .catch(()=>{}));
   self.skipWaiting();
 });
 self.addEventListener("activate", e => {
