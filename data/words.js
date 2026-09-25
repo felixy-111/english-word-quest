@@ -143,7 +143,7 @@ window.EN_WORDS = {
     ]},
 
     // Unit 4 Getting Together：L1 剩下 ＋ L2 Things on the Table ＋ L4 第一國
-    { id:"2026-09-25", title:"9 / 25", sub:"星期五 · U4 餐桌上的東西 ＋ CS3 樂器", words:[
+    { id:"2026-09-25", title:"9 / 25", sub:"星期五 · U4 餐桌上的東西", words:[
       // ou 在這裡唸 /ʌ/（跟 could／house 都不同），例外，老師要示範。
       {w:"cousin", pos:"n.", zh:"表（堂）兄弟姊妹", emoji:"👦", chunks:"cou-sin"},
       {w:"fork",   pos:"n.", zh:"叉子",             emoji:"🍴", chunks:""},
@@ -155,22 +155,23 @@ window.EN_WORDS = {
       {w:"cup",    pos:"n.", zh:"杯子",             emoji:"🥤", chunks:""},
       {w:"Mexico", pos:"n.", zh:"墨西哥",           emoji:"🇲🇽", chunks:"Mex-i-co"},
       // ── 安親班 CS3（Lily 老師）Reading Book 的拼字考範圍，補登記在這一天 ──
-      // noWrite:true ＝ 只進複習與上課抽考，不算進「今天紙本要寫幾個字」。
-      // 這些是安親班考的，不是太一指定的抄寫作業（2026-09-25 補）。
+      // teacherOnly:true ＝ 只出現在老師模式的抽考池，完全不進學生的單元流程
+      // （不算字數、不進學新字／默寫／拼字磚／單字表）。這些是安親班考的，
+      // 太一只在上課時抽考確認（2026-09-25）。
       // Unit 1 The band（9/14 考）
-      {w:"guitar",     pos:"n.", zh:"吉他", emoji:"🎸", chunks:"gui-tar",    noWrite:true},
-      {w:"band",       pos:"n.", zh:"樂團", emoji:"🎶", chunks:"",           noWrite:true},
-      {w:"xylophone",  pos:"n.", zh:"木琴", emoji:"🎹", chunks:"xy-lo-phone",noWrite:true},
-      {w:"drum",       pos:"n.", zh:"鼓",   emoji:"🥁", chunks:"",           noWrite:true},
-      {w:"trumpet",    pos:"n.", zh:"小號", emoji:"🎺", chunks:"trum-pet",   noWrite:true},
+      {w:"guitar",     pos:"n.", zh:"吉他", emoji:"🎸", chunks:"gui-tar",    teacherOnly:true},
+      {w:"band",       pos:"n.", zh:"樂團", emoji:"🎶", chunks:"",           teacherOnly:true},
+      {w:"xylophone",  pos:"n.", zh:"木琴", emoji:"🎹", chunks:"xy-lo-phone",teacherOnly:true},
+      {w:"drum",       pos:"n.", zh:"鼓",   emoji:"🥁", chunks:"",           teacherOnly:true},
+      {w:"trumpet",    pos:"n.", zh:"小號", emoji:"🎺", chunks:"trum-pet",   teacherOnly:true},
       // Unit 2 Play it（9/21 考）
-      {w:"instrument", pos:"n.", zh:"樂器", emoji:"🎻", chunks:"in-stru-ment",noWrite:true},
-      {w:"hit",        pos:"v.", zh:"敲、打", emoji:"👊", chunks:"",         noWrite:true},
-      {w:"shake",      pos:"v.", zh:"搖",   emoji:"🫳", chunks:"",           noWrite:true},
+      {w:"instrument", pos:"n.", zh:"樂器", emoji:"🎻", chunks:"in-stru-ment",teacherOnly:true},
+      {w:"hit",        pos:"v.", zh:"敲、打", emoji:"👊", chunks:"",         teacherOnly:true},
+      {w:"shake",      pos:"v.", zh:"搖",   emoji:"🫳", chunks:"",           teacherOnly:true},
       // bow 是多音字：這裡是小提琴的弓 /boʊ/，不是鞠躬 /baʊ/。
-      {w:"bow",        pos:"n.", zh:"琴弓", emoji:"🏹", chunks:"",           noWrite:true},
-      {w:"sticks",     pos:"n.", zh:"棒子", emoji:"🥢", chunks:"",           noWrite:true},
-      {w:"drumsticks", pos:"n.", zh:"鼓棒", emoji:"🥁", chunks:"drum-sticks",noWrite:true}
+      {w:"bow",        pos:"n.", zh:"琴弓", emoji:"🏹", chunks:"",           teacherOnly:true},
+      {w:"sticks",     pos:"n.", zh:"棒子", emoji:"🥢", chunks:"",           teacherOnly:true},
+      {w:"drumsticks", pos:"n.", zh:"鼓棒", emoji:"🥁", chunks:"drum-sticks",teacherOnly:true}
     ]},
 
     // Unit 4 L4 Countries 剩下 ＋ Unit 5 L1 Adjectives

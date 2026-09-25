@@ -617,7 +617,7 @@ details.patbox:not([open]) > :not(summary){display:none !important;}
 <script>
 "use strict";
 const DATA = window.EN_WORDS || {units:[]};
-const APP_VER = "v13｜2026.09.25 單音節不拆音塊／CS3 樂器 11 字";
+const APP_VER = "v14｜2026.09.25 CS3 字只在老師抽考出現";
 const LS_KEY = "ewq_state_v1";
 let store = loadStore();
 function loadStore(){ try{return JSON.parse(localStorage.getItem(LS_KEY))||{}}catch(e){return {}} }
@@ -772,11 +772,13 @@ function boxOf(uid,w){ return store.box[keyOf(uid,w)]||0; }
 // 「學過」＝跑過學新字，或已經在闖關裡答對過（兩條路都算數，統計才不會互相打架）
 function isSeen(uid,w){ const k=keyOf(uid,w); return !!store.seen[k] || (store.box[k]||0)>0; }
 function allPairs(){ const out=[]; allUnits().forEach(u=>u.words.forEach(w=>out.push({uid:u.id,u,w}))); return out; }
-function learnedCount(){ return allPairs().filter(p=>isSeen(p.uid,p.w.w)).length; }
+// 學生看得到的一切都走這個 —— teacherOnly（安親班 CS3）只留給老師模式抽考。
+function studentPairs(){ return allPairs().filter(p=>!p.w.teacherOnly); }
+function learnedCount(){ return studentPairs().filter(p=>isSeen(p.uid,p.w.w)).length; }
 function masteredCount(){ return Object.values(store.box).filter(v=>v>=3).length; }
-function totalWords(){ return allPairs().length; }
+function totalWords(){ return studentPairs().length; }
 function weakList(){
-  return allPairs().filter(p=>(store.wrong[keyOf(p.uid,p.w.w)]||0)>0 && boxOf(p.uid,p.w.w)<3)
+  return studentPairs().filter(p=>(store.wrong[keyOf(p.uid,p.w.w)]||0)>0 && boxOf(p.uid,p.w.w)<3)
     .sort((a,b)=>(store.wrong[keyOf(b.uid,b.w.w)]||0)-(store.wrong[keyOf(a.uid,a.w.w)]||0));
 }
 
@@ -1059,8 +1061,9 @@ function spawnCritters(){ const box=document.getElementById("critters"); if(!box
 const elView=document.getElementById("view");
 function crumb(t){ const c=document.getElementById("crumb"); if(c) c.textContent=t; }
 function unitProgress(u){
-  const n=u.words.length; let learned=0, mastered=0;
-  u.words.forEach(w=>{ if(isSeen(u.id,w.w))learned++; if(boxOf(u.id,w.w)>=3)mastered++; });
+  const ws=studentWords(u);
+  const n=ws.length; let learned=0, mastered=0;
+  ws.forEach(w=>{ if(isSeen(u.id,w.w))learned++; if(boxOf(u.id,w.w)>=3)mastered++; });
   return {n, learned, mastered, pct:Math.round(mastered/n*100)};
 }
 function viewHome(){
@@ -1080,7 +1083,7 @@ function viewHome(){
   const us=allUnits();
   const past=us.filter(u=>u.id<today), now=us.filter(u=>u.id>=today);
   const pastMastered=past.reduce((a,u)=>a+unitProgress(u).mastered,0);
-  const pastTotal=past.reduce((a,u)=>a+u.words.length,0);
+  const pastTotal=past.reduce((a,u)=>a+studentWords(u).length,0);
   const cards=now.map(card).join("");
   const doneHTML = past.length ? `
     <details class="donebox"><summary>📦 已完成 ${past.length} 天（${pastTotal} 個字 ‧ 💎精通 ${pastMastered}）　點開可以回去複習</summary>
@@ -1184,14 +1187,15 @@ function writeRec(uid){
   store.write[uid] = store.write[uid] || {done:{}};
   return store.write[uid];
 }
-// 安親班考試範圍（CS3）標 noWrite —— 進複習與上課抽考，但不算進
-// 「今天紙本要寫幾個字」。那些不是太一指定的抄寫作業。（2026-09-25）
-function writeWords(u){ return u ? u.words.filter(w=>!w.noWrite) : []; }
-function writeTotal(u){ return writeWords(u).length; }
+// 安親班考試範圍（CS3）標 teacherOnly —— 只出現在老師模式的抽考池，
+// 學生的單元流程完全看不到：不算字數、不進學新字／默寫／拼字磚／單字表。
+// 太一 2026-09-25：「不要在板塊這邊出現，只可以在我抽考的時候出現」。
+function studentWords(u){ return u ? u.words.filter(w=>!w.teacherOnly) : []; }
+function writeTotal(u){ return studentWords(u).length; }
 function writeDoneOf(uid){
   const u=unitById(uid); if(!u) return 0;
   const rec=writeRec(uid);
-  return writeWords(u).filter(w=>rec.done[w.w]).length;
+  return studentWords(u).filter(w=>rec.done[w.w]).length;
 }
 // 今天有單元就用今天的；沒有（例如今天不是上課日）就往回找「最近一次上課日」。
 // 2026-09-19 修：原本 fallback 是「第一個還沒寫完的」，會從最舊的開始撈，
@@ -1208,7 +1212,7 @@ function viewWrite(uid){
   S.uid=u.id;
   const rec=writeRec(u.id), n=writeDoneOf(u.id);
   crumb(u.title+" 要寫的字");
-  const rows=writeWords(u).map((w,i)=>{
+  const rows=studentWords(u).map((w,i)=>{
     const done=!!rec.done[w.w];
     return `<div class="wcard block ${done?'done':''}" data-w="${esc(w.w)}">
       <div class="wno">${i+1}</div>
@@ -1258,7 +1262,7 @@ function viewUnit(){
   const u=unitById(S.uid); if(!u) return viewHome();
   const p=unitProgress(u);
   crumb(u.title+" "+(u.sub||""));
-  const unlearned=u.words.filter(w=>!isSeen(u.id,w.w)).length;
+  const unlearned=studentWords(u).filter(w=>!isSeen(u.id,w.w)).length;
   elView.innerHTML=`
     <div class="card block">
       <div class="q-prompt">📅 ${esc(u.title)}　${esc(u.sub||"")}</div>
@@ -1289,7 +1293,7 @@ function viewUnit(){
 // ====== 單字表（老師／家長看，點字唸音）======
 function viewWordList(){
   const u=unitById(S.uid); if(!u) return viewHome();
-  const rows=u.words.map(w=>{ const k=keyOf(u.id,w.w), b=boxOf(u.id,w.w), nw=store.wrong[k]||0;
+  const rows=studentWords(u).map(w=>{ const k=keyOf(u.id,w.w), b=boxOf(u.id,w.w), nw=store.wrong[k]||0;
     const tag=b>=3?'<span class="tag ok">💎精通</span>':isSeen(u.id,w.w)?`<span class="tag mid">複習中 ${b}/3</span>`:'<span class="tag new">沒學過</span>';
     return `<div class="wrow" data-w="${esc(w.w)}">
       <span class="ww">${esc(w.w)}</span><span class="wz">${esc(w.zh)}</span>
@@ -1623,8 +1627,9 @@ function startWander(el, opts){
 // ====== ① 學新字：強制走「聽 → 說 → 拆」三步，才給看拼字 ======
 function startLearn(){
   const u=unitById(S.uid);
-  const unlearned=u.words.filter(w=>!isSeen(u.id,w.w));
-  S.learn={list:(unlearned.length?unlearned:u.words).slice(), idx:0};
+  const ws=studentWords(u);
+  const unlearned=ws.filter(w=>!isSeen(u.id,w.w));
+  S.learn={list:(unlearned.length?unlearned:ws).slice(), idx:0};
   renderLearn();
 }
 function renderLearn(){
@@ -1739,7 +1744,7 @@ function needsWork(uid, w){
 // 計分的 key 必須跟著各自的單元走，不能用整場共用的一個 uid。
 function startRecall(uid, mode){
   const u=unitById(uid); if(!u) return viewHome();
-  let list=shuffle(u.words.map(w=>({uid, w})));
+  let list=shuffle(studentWords(u).map(w=>({uid, w})));
   // 先洗牌再依「錯過幾次」穩定排序 → 沒記得的排前面，同分的維持隨機
   if(mode==="review"){
     const wt=it => needsWork(it.uid, it.w) ? (store.wrong[keyOf(it.uid, it.w.w)] || 0) : 0;
@@ -1754,7 +1759,7 @@ function startRecall(uid, mode){
 const DAILY_REVIEW_N = 8;   // 複習比學習快，所以比「一天 5 個新字」多抓幾個
 function dailyReviewPool(n){
   const today=todayKey();
-  const pairs=allPairs().filter(p=>p.uid<today && boxOf(p.uid,p.w.w)<3);
+  const pairs=studentPairs().filter(p=>p.uid<today && boxOf(p.uid,p.w.w)<3);
   // 盒號小的先出，同盒號裡錯得多的先出
   return shuffle(pairs).sort((a,b)=>{
     const d=boxOf(a.uid,a.w.w)-boxOf(b.uid,b.w.w); if(d) return d;
@@ -1882,8 +1887,8 @@ function renderRecallDone(){
 // Leitner 三盒：box1 每次都出、box2 出一半、box3 出四分之一；答對進一盒、答錯退回第 1 盒
 function buildQueue(uid, size){
   let pool;
-  if(uid==null){ pool=weakList().map(p=>({uid:p.uid,u:p.u,w:p.w})); if(!pool.length) pool=allPairs(); }
-  else { const u=unitById(uid); pool=u.words.map(w=>({uid:uid,u:u,w:w})); }
+  if(uid==null){ pool=weakList().map(p=>({uid:p.uid,u:p.u,w:p.w})); if(!pool.length) pool=studentPairs(); }
+  else { const u=unitById(uid); pool=studentWords(u).map(w=>({uid:uid,u:u,w:w})); }
   const b=(n)=>pool.filter(x=>{ const v=boxOf(x.uid,x.w.w); return n===1?v<=1:v===n; });
   let q=shuffle(b(1))
     .concat(shuffle(b(2)).slice(0, Math.ceil(b(2).length/2)))
@@ -2033,7 +2038,7 @@ function renderQuizDone(){
   }
   if(total>0 && Q.no===0){ unlock("perfect"); confetti(); }
   if(Q.uid!=null){ const u=unitById(Q.uid);
-    if(u && u.words.every(w=>boxOf(u.id,w.w)>=3)) unlock("master"); }
+    if(u && studentWords(u).every(w=>boxOf(u.id,w.w)>=3)) unlock("master"); }
   crumb("闖關結果");
   elView.innerHTML=`<div class="card block">
     <div class="q-prompt">${pct===100?"🏆 全對！太強了":pct>=70?"👍 不錯喔":"💪 再來一次會更好"}</div>
