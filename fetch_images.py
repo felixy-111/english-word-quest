@@ -56,6 +56,13 @@ OVERRIDE = {
     "light": None,             # 只有「明暗漸層」，課本 light 是「輕的」
     "hard": None,              # 只有「數學難題」，課本 hard 是「硬的」
     "greasy": None,            # 只有「胖瘦對比」，跟「油膩的」無關
+    # ── CS3 Reading Book 樂器單元（2026-09-25）。逐字查過 bestsearch：
+    "instrument": 8608,        # 查無 instrument；8608 是 musical instruments 合集
+    "band": 23811,             # 預設 3016 語意模糊；23811 標的是 music band
+    "hit": None,               # 預設 6513 是網球拍擊球，課本是「敲鼓」，會教錯
+    "bow": None,               # 預設 2946 是蝴蝶結（keywords: bow, knot），不是琴弓
+    "sticks": None,            # 預設 11322 是竿子／棍子，不是鼓棒
+    "drumsticks": None,        # 查無；搜 drumstick 單數也查無
 }
 # img/big.png 是手工合成的大小對比圖 —— ARASAAC 沒有小三看得懂的「大的」
 # （不是紅方框比大小就是 XL 吊牌）。腳本會跳過已存在的檔，不會蓋掉手工圖。

@@ -617,7 +617,7 @@ details.patbox:not([open]) > :not(summary){display:none !important;}
 <script>
 "use strict";
 const DATA = window.EN_WORDS || {units:[]};
-const APP_VER = "v12｜2026.09.20 修更新抓不到新版／檢查更新按鈕／木劍方向";
+const APP_VER = "v13｜2026.09.25 單音節不拆音塊／CS3 樂器 11 字";
 const LS_KEY = "ewq_state_v1";
 let store = loadStore();
 function loadStore(){ try{return JSON.parse(localStorage.getItem(LS_KEY))||{}}catch(e){return {}} }
@@ -850,7 +850,9 @@ function speak(text, rate){
 function speakChunks(word){
   if(!store.opt.voice) return;
   const parts=(word.chunks||"").split("-").filter(Boolean);
-  if(!parts.length){ speak(word.w); return; }
+  // <=1：chunks 留空，或像 knife 那樣只填整個字（為了保住 silent 畫淡）。
+  // 都沒有音塊音檔，硬抓 _c0.mp3 會 404 → 誤觸 TTS 退路造成雙重發聲。
+  if(parts.length<=1){ speak(word.w); return; }
   const urls=parts.map((_,i)=>"audio/"+encodeURIComponent(word.w)+"_c"+i+".mp3");
   urls.push(clipURL(word.w));
   playClips(urls, ()=>ttsChunks(word));
@@ -963,7 +965,7 @@ function resetDaily(){ const today=new Date().toLocaleDateString('en-CA');
 function dailyTarget(def){
   if(def.id!=="write") return def.target;
   const u=todayUnit();
-  return (u && u.words.length) || def.target;
+  return (u && writeTotal(u)) || def.target;
 }
 function dailyHTML(){ resetDaily(); const d=store.daily;
   const rows=DAILY_DEFS.map(x=>{ const t=dailyTarget(x), v=Math.min(d[x.id]||0, t), done=!!d.claimed[x.id];
@@ -1071,7 +1073,7 @@ function viewHome(){
     return `<div class="lesson-card block" data-uid="${u.id}">
       <div class="no">${esc(u.sub||"")}${u.id===today?'　<span class="utype vo">今天</span>':''}</div>
       <div class="nm">${esc(u.title)}</div>
-      <div class="meta">${p.n} 個字 ‧ 寫好 ${writeDoneOf(u.id)}／${p.n}</div>
+      <div class="meta">${p.n} 個字 ‧ 寫好 ${writeDoneOf(u.id)}／${writeTotal(u)}</div>
       <div class="bar2"><i style="width:${p.pct}%"></i></div>
       <div class="meta">學過 ${p.learned}／${p.n}　💎精通 ${p.mastered}</div>
     </div>`; };
@@ -1086,7 +1088,7 @@ function viewHome(){
     </details>` : "";
   // 「今天的 20 分鐘」＝家長提案裡的三段。順序照提案，狀態一眼看得到。
   const tu=todayUnit(), pu=prevStudiedUnit(tu.id), f=flowRec();
-  const wDone=writeDoneOf(tu.id), wAll=tu.words.length;
+  const wDone=writeDoneOf(tu.id), wAll=writeTotal(tu);
   const step2Done = wDone>=wAll;
   const cardHTML=(no,cls,title,sub,min)=>
     `<div class="flowcard block ${cls}" data-step="${no}">
@@ -1182,10 +1184,14 @@ function writeRec(uid){
   store.write[uid] = store.write[uid] || {done:{}};
   return store.write[uid];
 }
+// 安親班考試範圍（CS3）標 noWrite —— 進複習與上課抽考，但不算進
+// 「今天紙本要寫幾個字」。那些不是太一指定的抄寫作業。（2026-09-25）
+function writeWords(u){ return u ? u.words.filter(w=>!w.noWrite) : []; }
+function writeTotal(u){ return writeWords(u).length; }
 function writeDoneOf(uid){
   const u=unitById(uid); if(!u) return 0;
   const rec=writeRec(uid);
-  return u.words.filter(w=>rec.done[w.w]).length;
+  return writeWords(u).filter(w=>rec.done[w.w]).length;
 }
 // 今天有單元就用今天的；沒有（例如今天不是上課日）就往回找「最近一次上課日」。
 // 2026-09-19 修：原本 fallback 是「第一個還沒寫完的」，會從最舊的開始撈，
@@ -1194,7 +1200,7 @@ function todayUnit(){
   const t=todayKey();
   const hit=unitById(t); if(hit) return hit;
   const past=allUnits().filter(u=>u.id<=t).sort((a,b)=>b.id.localeCompare(a.id)); // 新→舊
-  return past.find(u=>writeDoneOf(u.id) < u.words.length) || past[0] || allUnits()[0];
+  return past.find(u=>writeDoneOf(u.id) < writeTotal(u)) || past[0] || allUnits()[0];
 }
 
 function viewWrite(uid){
@@ -1202,7 +1208,7 @@ function viewWrite(uid){
   S.uid=u.id;
   const rec=writeRec(u.id), n=writeDoneOf(u.id);
   crumb(u.title+" 要寫的字");
-  const rows=u.words.map((w,i)=>{
+  const rows=writeWords(u).map((w,i)=>{
     const done=!!rec.done[w.w];
     return `<div class="wcard block ${done?'done':''}" data-w="${esc(w.w)}">
       <div class="wno">${i+1}</div>
@@ -1216,8 +1222,8 @@ function viewWrite(uid){
       <button class="wbtn ${done?'on':''}">${done?'✅ 已寫':'寫好了'}</button>
     </div>`; }).join("");
   elView.innerHTML=`<div class="writehead block">
-      <div class="q-prompt" style="text-align:center">📝 ${esc(u.title)}　要寫的 ${u.words.length} 個字</div>
-      <div class="statline" style="text-align:center">全部都要寫 ‧ 每個字寫 5 次 ‧ 已完成 ${n}／${u.words.length}</div>
+      <div class="q-prompt" style="text-align:center">📝 ${esc(u.title)}　要寫的 ${writeTotal(u)} 個字</div>
+      <div class="statline" style="text-align:center">全部都要寫 ‧ 每個字寫 5 次 ‧ 已完成 ${n}／${writeTotal(u)}</div>
       <div class="wsteps">
         <div class="wstep s-look"><b>1</b>看著抄</div>
         <div class="wstep s-look"><b>2</b>看著抄</div>
@@ -1238,8 +1244,8 @@ function viewWrite(uid){
       const key=card.dataset.w; if(rec.done[key]) return;
       rec.done[key]=1; saveStore(); sOk(); addXP(3); rewardPop("+3 XP"); dailyProgress("write");
       buddyReact('happy');
-      if(writeDoneOf(u.id)>=u.words.length){ addCoins(10); confetti(); sWin();
-        toast(`📝 今天的 ${u.words.length} 個字都寫完了！　+10💰`,""); }
+      if(writeDoneOf(u.id)>=writeTotal(u)){ addCoins(10); confetti(); sWin();
+        toast(`📝 今天的 ${writeTotal(u)} 個字都寫完了！　+10💰`,""); }
       viewWrite(u.id);
     };
   });
@@ -1261,7 +1267,7 @@ function viewUnit(){
     <div class="home-sec" style="margin-top:12px">
       <div class="home-h">聽 → 說 → 看 → 拆 → 寫</div>
       <button class="btn btn-grass" id="mLearn" style="width:100%;margin-bottom:8px">📖 學新字（聽說看拆）${unlearned?`　還有 ${unlearned} 個沒學`:""}</button>
-      <button class="btn btn-gold" id="mWrite" style="width:100%;margin-bottom:8px">📝 寫這 ${p.n} 個字（${writeDoneOf(u.id)}／${p.n}）</button>
+      <button class="btn btn-gold" id="mWrite" style="width:100%;margin-bottom:8px">📝 寫這 ${writeTotal(u)} 個字（${writeDoneOf(u.id)}／${writeTotal(u)}）</button>
       <button class="btn btn-diamond" id="mDict" style="width:100%">✏️ 蓋起來默寫</button>
     </div>
     <div class="home-sec" style="margin-top:14px">

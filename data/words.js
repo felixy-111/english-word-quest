@@ -9,8 +9,9 @@
 //       圖檔載入失敗時自動退回 emoji，所以 emoji 欄位不要拿掉。
 //
 // chunks 拆解規則（兩層，不要混用）：
-//   ① 多音節字先切音節：pa-per、plas-tic、re-cy-cle
-//   ② 單音節字切「首音 ＋ 韻腳」：pl-ant、c-at、sh-op
+//   ① 多音節字切音節：pa-per、plas-tic、re-cy-cle
+//   ② 單音節字不拆，chunks 留空 —— 拆成「首音＋韻腳」（b-and）會讓學生以為
+//      要唸兩拍，而且音檔真的會分段播出來。2026-09-25 改，原本是切首音＋韻腳。
 //   ③ 母音開頭的單音節字切「母音組合 ＋ 尾音」：ea-t
 //   ④ 不規則字不切，標 sight:true
 //
@@ -20,13 +21,13 @@
 // 老師上課現場加的字走 App 裡的「👩‍🏫 老師：加單字」，存在裝置的 localStorage，
 // 匯出後再灌進這個檔才會跟著上線給孩子。
 window.EN_WORDS = {
-  version: "cs3+m1-2026-09-19",
+  version: "cs3+m1-2026-09-25",
   units: [
     // 來源：安親班 CS3（9/7，Lily 老師）指定的拼字考單字。主題 Save the Earth。
     { id:"2026-09-12", title:"9 / 12", sub:"星期六", words:[
       // 這課的作業是 Write 6 ways to save the earth，「plant trees（種樹）」是標準答案，
       // 所以用動詞「種植」而不是名詞「植物」——ARASAAC 抓到的圖也正是動手種下去那張。
-      {w:"plant",   pos:"v.", zh:"種植", emoji:"🌱", chunks:"pl-ant"},
+      {w:"plant",   pos:"v.", zh:"種植", emoji:"🌱", chunks:""},
       {w:"paper",   pos:"n.", zh:"紙",   emoji:"📄", chunks:"pa-per"},
       {w:"plastic", pos:"n.", zh:"塑膠", emoji:"🥤", chunks:"plas-tic"},
       {w:"recycle", pos:"v.", zh:"回收", emoji:"♻️", chunks:"re-cy-cle"},
@@ -34,7 +35,7 @@ window.EN_WORDS = {
       // ⚠️ ear 在 hear／near／year 唸 /ɪr/，但 earth／early／learn 唸 /ɜr/ —— 這是例外。
       // 太一 2026-09-13 決定：還是照拆，不要寫「拼不出來」（那句話會讓家長以為只能死背）。
       // 代價是「拆」的語音會把 Ear 唸成「ear（耳朵）」，這個音要老師當面示範。
-      {w:"Earth",   pos:"n.", zh:"地球", emoji:"🌍", chunks:"Ear-th"}
+      {w:"Earth",   pos:"n.", zh:"地球", emoji:"🌍", chunks:""}
     ]},
 
     // ─────────────────────────────────────────────────────────────────────
@@ -48,7 +49,7 @@ window.EN_WORDS = {
 
     // Unit 1 Things to Eat：L1 Snacks ＋ L2 Vegetables 開頭
     { id:"2026-09-14", title:"9 / 14", sub:"星期一 · U1 零食", words:[
-      {w:"gum",           pos:"n.", zh:"口香糖",  emoji:"🍬", chunks:"g-um"},
+      {w:"gum",           pos:"n.", zh:"口香糖",  emoji:"🍬", chunks:""},
       {w:"popcorn",       pos:"n.", zh:"爆米花",  emoji:"🍿", chunks:"pop-corn"},
       {w:"peanuts",       pos:"n.", zh:"花生",    emoji:"🥜", chunks:"pea-nuts"},
       // chocolate 唸起來只有兩個音節（choc-late），但拼起來多一個 o。
@@ -76,27 +77,27 @@ window.EN_WORDS = {
 
     // Unit 2 Around Town：L1 Places to Go ＋ L2 前兩個動詞
     { id:"2026-09-16", title:"9 / 16", sub:"星期三 · U2 城裡的地方", words:[
-      {w:"park",             pos:"n.", zh:"公園",       emoji:"🌳", chunks:"p-ark"},
+      {w:"park",             pos:"n.", zh:"公園",       emoji:"🌳", chunks:""},
       {w:"movie theater",    pos:"n.", zh:"電影院",     emoji:"🎬", chunks:""},
       {w:"supermarket",      pos:"n.", zh:"超級市場",   emoji:"🛒", chunks:"su-per-mar-ket"},
       {w:"post office",      pos:"n.", zh:"郵局",       emoji:"📮", chunks:""},
       {w:"department store", pos:"n.", zh:"百貨公司",   emoji:"🏬", chunks:""},
       {w:"library",          pos:"n.", zh:"圖書館",     emoji:"📚", chunks:"li-brar-y"},
-      {w:"shop",             pos:"v.", zh:"買東西",     emoji:"🛍️", chunks:"sh-op"},
+      {w:"shop",             pos:"v.", zh:"買東西",     emoji:"🛍️", chunks:""},
       // 課本是 watch a movie，只收關鍵動詞 watch
-      {w:"watch",            pos:"v.", zh:"看（電影）", emoji:"📺", chunks:"w-atch"}
+      {w:"watch",            pos:"v.", zh:"看（電影）", emoji:"📺", chunks:""}
     ]},
 
     // Unit 2：L2 Things to Do 剩下的動詞 ＋ L4 Activities（美術）
     { id:"2026-09-17", title:"9 / 17", sub:"星期四 · U2 做什麼事", words:[
       {w:"borrow", pos:"v.", zh:"借（書）", emoji:"📖", chunks:"bor-row"},
-      {w:"mail",   pos:"v.", zh:"寄（信）", emoji:"✉️", chunks:"m-ail"},
-      {w:"buy",    pos:"v.", zh:"買",       emoji:"💰", chunks:"b-uy"},
-      {w:"kick",   pos:"v.", zh:"踢",       emoji:"⚽", chunks:"k-ick"},
+      {w:"mail",   pos:"v.", zh:"寄（信）", emoji:"✉️", chunks:""},
+      {w:"buy",    pos:"v.", zh:"買",       emoji:"💰", chunks:""},
+      {w:"kick",   pos:"v.", zh:"踢",       emoji:"⚽", chunks:""},
       {w:"color",  pos:"v.", zh:"著色",     emoji:"🖍️", chunks:"col-or"},
-      {w:"cut",    pos:"v.", zh:"剪",       emoji:"✂️", chunks:"c-ut"},
-      {w:"glue",   pos:"v.", zh:"黏貼",     emoji:"🧴", chunks:"gl-ue"},
-      {w:"fold",   pos:"v.", zh:"摺",       emoji:"📄", chunks:"f-old"}
+      {w:"cut",    pos:"v.", zh:"剪",       emoji:"✂️", chunks:""},
+      {w:"glue",   pos:"v.", zh:"黏貼",     emoji:"🧴", chunks:""},
+      {w:"fold",   pos:"v.", zh:"摺",       emoji:"📄", chunks:""}
     ]},
 
     // Unit 3 People in Town：L1 Occupations ＋ L2 的 cook、bus driver
@@ -107,8 +108,8 @@ window.EN_WORDS = {
       {w:"postal worker", pos:"n.", zh:"郵差",     emoji:"📮", chunks:""},
       {w:"salesperson",   pos:"n.", zh:"店員",     emoji:"🏷️", chunks:"sales-per-son"},
       {w:"server",        pos:"n.", zh:"服務生",   emoji:"🍽️", chunks:"serv-er"},
-      {w:"vet",           pos:"n.", zh:"獸醫",     emoji:"🐕", chunks:"v-et"},
-      {w:"cook",          pos:"n.", zh:"廚師",     emoji:"👨‍🍳", chunks:"c-ook"},
+      {w:"vet",           pos:"n.", zh:"獸醫",     emoji:"🐕", chunks:""},
+      {w:"cook",          pos:"n.", zh:"廚師",     emoji:"👨‍🍳", chunks:""},
       {w:"bus driver",    pos:"n.", zh:"公車司機", emoji:"🚌", chunks:""}
     ]},
 
@@ -116,11 +117,11 @@ window.EN_WORDS = {
     { id:"2026-09-21", title:"9 / 21", sub:"星期一 · U3 工作在做什麼", words:[
       {w:"pilot",       pos:"n.", zh:"飛行員",     emoji:"✈️", chunks:"pi-lot"},
       {w:"firefighter", pos:"n.", zh:"消防員",     emoji:"🚒", chunks:"fire-fight-er"},
-      {w:"make",        pos:"v.", zh:"做（食物）", emoji:"🍳", chunks:"m-ake"},
-      {w:"sell",        pos:"v.", zh:"賣",         emoji:"🏷️", chunks:"s-ell"},
-      {w:"help",        pos:"v.", zh:"幫忙",       emoji:"🤝", chunks:"h-elp"},
-      {w:"drive",       pos:"v.", zh:"開（車）",   emoji:"🚌", chunks:"dr-ive"},
-      {w:"fly",         pos:"v.", zh:"開（飛機）", emoji:"✈️", chunks:"fl-y"},
+      {w:"make",        pos:"v.", zh:"做（食物）", emoji:"🍳", chunks:""},
+      {w:"sell",        pos:"v.", zh:"賣",         emoji:"🏷️", chunks:""},
+      {w:"help",        pos:"v.", zh:"幫忙",       emoji:"🤝", chunks:""},
+      {w:"drive",       pos:"v.", zh:"開（車）",   emoji:"🚌", chunks:""},
+      {w:"fly",         pos:"v.", zh:"開（飛機）", emoji:"✈️", chunks:""},
       // ⚠️ 原本照「只收關鍵字」拆成 fight，中文卻寫「撲滅（火）」——等於把 fight
       // 這個字教成「滅火」。課本原文是 fight fires，整個收才不會教錯。
       // （太一 2026-09-13 抓到）複合詞不拆音塊，跟 potato chips 一樣。
@@ -130,29 +131,46 @@ window.EN_WORDS = {
     // Unit 3 L4 Illnesses ＋ Unit 4 L1 Family
     { id:"2026-09-23", title:"9 / 23", sub:"星期三 · U3 生病 · U4 家人", words:[
       // 課本 L4 教的是生病，但 cold 更常用的是「冷的」，兩個意思都給。
-      {w:"cold",         pos:"n./adj.", zh:"感冒；冷的", emoji:"🤧", chunks:"c-old"},
+      {w:"cold",         pos:"n./adj.", zh:"感冒；冷的", emoji:"🤧", chunks:""},
       {w:"fever",        pos:"n.", zh:"發燒",       emoji:"🌡️", chunks:"fe-ver"},
       {w:"stomachache",  pos:"n.", zh:"肚子痛",     emoji:"🤢", chunks:"stom-ach-ache"},
       {w:"headache",     pos:"n.", zh:"頭痛",       emoji:"🤕", chunks:"head-ache"},
       {w:"parents",      pos:"n.", zh:"爸爸媽媽",   emoji:"👨‍👩‍👧", chunks:"par-ents"},
       {w:"grandparents", pos:"n.", zh:"爺爺奶奶",   emoji:"👴", chunks:"grand-par-ents"},
       // au 在這裡唸 /æ/，跟 autumn／August 的 /ɔ/ 不一樣（例外，老師要示範）。
-      {w:"aunt",         pos:"n.", zh:"阿姨、姑姑", emoji:"👩", chunks:"au-nt"},
+      {w:"aunt",         pos:"n.", zh:"阿姨、姑姑", emoji:"👩", chunks:""},
       {w:"uncle",        pos:"n.", zh:"叔叔、舅舅", emoji:"👨", chunks:"un-cle"}
     ]},
 
     // Unit 4 Getting Together：L1 剩下 ＋ L2 Things on the Table ＋ L4 第一國
-    { id:"2026-09-25", title:"9 / 25", sub:"星期五 · U4 餐桌上的東西", words:[
+    { id:"2026-09-25", title:"9 / 25", sub:"星期五 · U4 餐桌上的東西 ＋ CS3 樂器", words:[
       // ou 在這裡唸 /ʌ/（跟 could／house 都不同），例外，老師要示範。
       {w:"cousin", pos:"n.", zh:"表（堂）兄弟姊妹", emoji:"👦", chunks:"cou-sin"},
-      {w:"fork",   pos:"n.", zh:"叉子",             emoji:"🍴", chunks:"f-ork"},
+      {w:"fork",   pos:"n.", zh:"叉子",             emoji:"🍴", chunks:""},
       // k 不發音 —— silent 欄位會把那個字母畫淡，字仍然是完整的。
-      {w:"knife",  pos:"n.", zh:"刀子",             emoji:"🔪", chunks:"kn-ife", silent:"k"},
-      {w:"spoon",  pos:"n.", zh:"湯匙",             emoji:"🥄", chunks:"sp-oon"},
-      {w:"plate",  pos:"n.", zh:"盤子",             emoji:"🍽️", chunks:"pl-ate"},
-      {w:"bowl",   pos:"n.", zh:"碗",               emoji:"🥣", chunks:"b-owl"},
-      {w:"cup",    pos:"n.", zh:"杯子",             emoji:"🥤", chunks:"c-up"},
-      {w:"Mexico", pos:"n.", zh:"墨西哥",           emoji:"🇲🇽", chunks:"Mex-i-co"}
+      {w:"knife",  pos:"n.", zh:"刀子",             emoji:"🔪", chunks:"knife", silent:"k"},
+      {w:"spoon",  pos:"n.", zh:"湯匙",             emoji:"🥄", chunks:""},
+      {w:"plate",  pos:"n.", zh:"盤子",             emoji:"🍽️", chunks:""},
+      {w:"bowl",   pos:"n.", zh:"碗",               emoji:"🥣", chunks:""},
+      {w:"cup",    pos:"n.", zh:"杯子",             emoji:"🥤", chunks:""},
+      {w:"Mexico", pos:"n.", zh:"墨西哥",           emoji:"🇲🇽", chunks:"Mex-i-co"},
+      // ── 安親班 CS3（Lily 老師）Reading Book 的拼字考範圍，補登記在這一天 ──
+      // noWrite:true ＝ 只進複習與上課抽考，不算進「今天紙本要寫幾個字」。
+      // 這些是安親班考的，不是太一指定的抄寫作業（2026-09-25 補）。
+      // Unit 1 The band（9/14 考）
+      {w:"guitar",     pos:"n.", zh:"吉他", emoji:"🎸", chunks:"gui-tar",    noWrite:true},
+      {w:"band",       pos:"n.", zh:"樂團", emoji:"🎶", chunks:"",           noWrite:true},
+      {w:"xylophone",  pos:"n.", zh:"木琴", emoji:"🎹", chunks:"xy-lo-phone",noWrite:true},
+      {w:"drum",       pos:"n.", zh:"鼓",   emoji:"🥁", chunks:"",           noWrite:true},
+      {w:"trumpet",    pos:"n.", zh:"小號", emoji:"🎺", chunks:"trum-pet",   noWrite:true},
+      // Unit 2 Play it（9/21 考）
+      {w:"instrument", pos:"n.", zh:"樂器", emoji:"🎻", chunks:"in-stru-ment",noWrite:true},
+      {w:"hit",        pos:"v.", zh:"敲、打", emoji:"👊", chunks:"",         noWrite:true},
+      {w:"shake",      pos:"v.", zh:"搖",   emoji:"🫳", chunks:"",           noWrite:true},
+      // bow 是多音字：這裡是小提琴的弓 /boʊ/，不是鞠躬 /baʊ/。
+      {w:"bow",        pos:"n.", zh:"琴弓", emoji:"🏹", chunks:"",           noWrite:true},
+      {w:"sticks",     pos:"n.", zh:"棒子", emoji:"🥢", chunks:"",           noWrite:true},
+      {w:"drumsticks", pos:"n.", zh:"鼓棒", emoji:"🥁", chunks:"drum-sticks",noWrite:true}
     ]},
 
     // Unit 4 L4 Countries 剩下 ＋ Unit 5 L1 Adjectives
@@ -161,49 +179,49 @@ window.EN_WORDS = {
       {w:"Russia",  pos:"n.",   zh:"俄羅斯",       emoji:"🇷🇺", chunks:"Rus-sia"},
       // Türkiye 是土耳其 2022 年起的正式國名寫法，課本用這個拼法，ü 上面兩點不能省。
       {w:"Türkiye", pos:"n.",   zh:"土耳其",       emoji:"🇹🇷", chunks:"Tür-ki-ye"},
-      {w:"tall",    pos:"adj.", zh:"高的",         emoji:"📏", chunks:"t-all"},
-      {w:"short",   pos:"adj.", zh:"矮的、短的",   emoji:"📐", chunks:"sh-ort"},
-      {w:"old",     pos:"adj.", zh:"年紀大的、舊的", emoji:"👴", chunks:"o-ld"},
-      {w:"young",   pos:"adj.", zh:"年輕的",       emoji:"👶", chunks:"y-oung"},
-      {w:"quick",   pos:"adj.", zh:"快的",         emoji:"⚡", chunks:"qu-ick"}
+      {w:"tall",    pos:"adj.", zh:"高的",         emoji:"📏", chunks:""},
+      {w:"short",   pos:"adj.", zh:"矮的、短的",   emoji:"📐", chunks:""},
+      {w:"old",     pos:"adj.", zh:"年紀大的、舊的", emoji:"👴", chunks:""},
+      {w:"young",   pos:"adj.", zh:"年輕的",       emoji:"👶", chunks:""},
+      {w:"quick",   pos:"adj.", zh:"快的",         emoji:"⚡", chunks:""}
     ]},
 
     // Unit 5：L1 剩下 ＋ 人物 ＋ L2 Adjectives 開頭
     { id:"2026-09-28", title:"9 / 28", sub:"星期一 · U5 人物與形容詞", words:[
-      {w:"slow",  pos:"adj.", zh:"慢的",       emoji:"🐢", chunks:"sl-ow"},
-      {w:"man",   pos:"n.",   zh:"男人",       emoji:"👨", chunks:"m-an"},
+      {w:"slow",  pos:"adj.", zh:"慢的",       emoji:"🐢", chunks:""},
+      {w:"man",   pos:"n.",   zh:"男人",       emoji:"👨", chunks:""},
       {w:"woman", pos:"n.",   zh:"女人",       emoji:"👩", chunks:"wom-an"},
-      {w:"boy",   pos:"n.",   zh:"男孩",       emoji:"👦", chunks:"b-oy"},
-      {w:"girl",  pos:"n.",   zh:"女孩",       emoji:"👧", chunks:"g-irl"},
-      {w:"thick", pos:"adj.", zh:"厚的",       emoji:"📚", chunks:"th-ick"},
-      {w:"thin",  pos:"adj.", zh:"薄的、瘦的", emoji:"📄", chunks:"th-in"},
+      {w:"boy",   pos:"n.",   zh:"男孩",       emoji:"👦", chunks:""},
+      {w:"girl",  pos:"n.",   zh:"女孩",       emoji:"👧", chunks:""},
+      {w:"thick", pos:"adj.", zh:"厚的",       emoji:"📚", chunks:""},
+      {w:"thin",  pos:"adj.", zh:"薄的、瘦的", emoji:"📄", chunks:""},
       // clean 在課本出現兩次：U5L2 是形容詞「乾淨的」，寫作本 U2 是動詞「打掃」。
       // 同一個拼字、同一個進度紀錄，中文兩義一起給，不另外開一筆。
-      {w:"clean", pos:"adj.", zh:"乾淨的；打掃", emoji:"🧹", chunks:"cl-ean"}
+      {w:"clean", pos:"adj.", zh:"乾淨的；打掃", emoji:"🧹", chunks:""}
     ]},
 
     // Unit 5：L2 剩下 ＋ L4 Adjectives（科學）＋ 寫作本 U1 味道
     { id:"2026-09-30", title:"9 / 30", sub:"星期三 · U5 形容詞 · 寫作本味道", words:[
       {w:"dirty", pos:"adj.", zh:"髒的",   emoji:"🧦", chunks:"dir-ty"},
       {w:"baggy", pos:"adj.", zh:"寬鬆的", emoji:"👖", chunks:"bag-gy"},
-      {w:"tight", pos:"adj.", zh:"緊的",   emoji:"👖", chunks:"t-ight"},
-      {w:"hard",  pos:"adj.", zh:"硬的",   emoji:"🪨", chunks:"h-ard"},
-      {w:"soft",  pos:"adj.", zh:"軟的",   emoji:"🧸", chunks:"s-oft"},
+      {w:"tight", pos:"adj.", zh:"緊的",   emoji:"👖", chunks:""},
+      {w:"hard",  pos:"adj.", zh:"硬的",   emoji:"🪨", chunks:""},
+      {w:"soft",  pos:"adj.", zh:"軟的",   emoji:"🧸", chunks:""},
       {w:"heavy", pos:"adj.", zh:"重的",   emoji:"🏋️", chunks:"heav-y"},
-      {w:"light", pos:"adj.", zh:"輕的",   emoji:"🪶", chunks:"l-ight"},
-      {w:"sweet", pos:"adj.", zh:"甜的",   emoji:"🍭", chunks:"sw-eet"}
+      {w:"light", pos:"adj.", zh:"輕的",   emoji:"🪶", chunks:""},
+      {w:"sweet", pos:"adj.", zh:"甜的",   emoji:"🍭", chunks:""}
     ]},
 
     // 寫作本 Seedlings U1 My Strange Pizza（味道）＋ U3 A Messy Bedroom 開頭
     { id:"2026-10-02", title:"10 / 2", sub:"星期五 · 寫作本 味道與房間", words:[
-      {w:"sour",   pos:"adj.", zh:"酸的",   emoji:"🍋", chunks:"s-our"},
+      {w:"sour",   pos:"adj.", zh:"酸的",   emoji:"🍋", chunks:""},
       {w:"salty",  pos:"adj.", zh:"鹹的",   emoji:"🧂", chunks:"salt-y"},
       {w:"bitter", pos:"adj.", zh:"苦的",   emoji:"🍫", chunks:"bit-ter"},
       {w:"spicy",  pos:"adj.", zh:"辣的",   emoji:"🌶️", chunks:"spi-cy"},
       {w:"greasy", pos:"adj.", zh:"油膩的", emoji:"🍔", chunks:"greas-y"},
-      {w:"bed",    pos:"n.",   zh:"床",     emoji:"🛏️", chunks:"b-ed"},
-      {w:"desk",   pos:"n.",   zh:"書桌",   emoji:"🪑", chunks:"d-esk"},
-      {w:"lamp",   pos:"n.",   zh:"檯燈",   emoji:"💡", chunks:"l-amp"}
+      {w:"bed",    pos:"n.",   zh:"床",     emoji:"🛏️", chunks:""},
+      {w:"desk",   pos:"n.",   zh:"書桌",   emoji:"🪑", chunks:""},
+      {w:"lamp",   pos:"n.",   zh:"檯燈",   emoji:"💡", chunks:""}
     ]},
 
     // 寫作本 U3 剩下 ＋ U2 Weekly Activities（片語只收關鍵字）
@@ -214,8 +232,8 @@ window.EN_WORDS = {
       // 課本是 have an art lesson，複合名詞整個留
       {w:"art lesson", pos:"n.", zh:"美術課", emoji:"🎨", chunks:""},
       // ride my bike → 取 bike；go swimming → 取 swim；do puzzles → 取 puzzle
-      {w:"bike",       pos:"n.", zh:"腳踏車", emoji:"🚲", chunks:"b-ike"},
-      {w:"swim",       pos:"v.", zh:"游泳",   emoji:"🏊", chunks:"sw-im"},
+      {w:"bike",       pos:"n.", zh:"腳踏車", emoji:"🚲", chunks:""},
+      {w:"swim",       pos:"v.", zh:"游泳",   emoji:"🏊", chunks:""},
       {w:"puzzle",     pos:"n.", zh:"拼圖",   emoji:"🧩", chunks:"puz-zle"},
       {w:"yoga",       pos:"n.", zh:"瑜珈",   emoji:"🧘", chunks:"yo-ga"}
     ]}
