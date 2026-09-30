@@ -1,6 +1,6 @@
 // 單字大冒險 ── 單字資料
 //
-// 單元＝日期，一天固定 8 個字（太一 2026-09-12 指定）。
+// 單元＝日期，一天固定 8 個字（太一 2026-09-12 指定）；10/1 起改成 6 個字（家長要求）。
 // 2026-09-21 起上課日改成「週一 / 三 / 五 / 日」——家長反映週二、四時間不夠，
 // 拿掉那兩天、補一天週日，原本的內容依序往後遞延（太一 2026-09-19）。
 // 欄位：w 英文｜pos 詞性｜zh 中文｜emoji 備援圖示｜chunks 音塊｜anim 微動效
@@ -21,7 +21,7 @@
 // 老師上課現場加的字走 App 裡的「👩‍🏫 老師：加單字」，存在裝置的 localStorage，
 // 匯出後再灌進這個檔才會跟著上線給孩子。
 window.EN_WORDS = {
-  version: "cs3+m1-2026-09-25",
+  version: "cs3+m1-2026-10-01",
   units: [
     // 來源：安親班 CS3（9/7，Lily 老師）指定的拼字考單字。主題 Save the Earth。
     { id:"2026-09-12", title:"9 / 12", sub:"星期六", words:[
@@ -213,6 +213,12 @@ window.EN_WORDS = {
       {w:"sweet", pos:"adj.", zh:"甜的",   emoji:"🍭", chunks:""}
     ]},
 
+    // ─────────────────────────────────────────────────────────────────────
+    // 10/1 起一天改成 6 個字（家長要求，太一 2026-10-01）。9 月的板塊維持 8 個不動。
+    // 原本 10/2、10/4 各 8 字，照原順序重切成 6 / 6 / 4；10/5 剩的 2 格留給
+    // Kerri 老師 9/30 的新字（VB p5，黑白 vocabulary book），接在後面、不插隊。
+    // ─────────────────────────────────────────────────────────────────────
+
     // 寫作本 Seedlings U1 My Strange Pizza（味道）＋ U3 A Messy Bedroom 開頭
     { id:"2026-10-02", title:"10 / 2", sub:"星期五 · 寫作本 味道與房間", words:[
       {w:"sour",   pos:"adj.", zh:"酸的",   emoji:"🍋", chunks:""},
@@ -220,18 +226,22 @@ window.EN_WORDS = {
       {w:"bitter", pos:"adj.", zh:"苦的",   emoji:"🍫", chunks:"bit-ter"},
       {w:"spicy",  pos:"adj.", zh:"辣的",   emoji:"🌶️", chunks:"spi-cy"},
       {w:"greasy", pos:"adj.", zh:"油膩的", emoji:"🍔", chunks:"greas-y"},
-      {w:"bed",    pos:"n.",   zh:"床",     emoji:"🛏️", chunks:""},
-      {w:"desk",   pos:"n.",   zh:"書桌",   emoji:"🪑", chunks:""},
-      {w:"lamp",   pos:"n.",   zh:"檯燈",   emoji:"💡", chunks:""}
+      {w:"bed",    pos:"n.",   zh:"床",     emoji:"🛏️", chunks:""}
     ]},
 
-    // 寫作本 U3 剩下 ＋ U2 Weekly Activities（片語只收關鍵字）
-    { id:"2026-10-04", title:"10 / 4", sub:"星期日 · 寫作本 房間與每週活動", words:[
+    // 寫作本 U3 A Messy Bedroom 剩下 ＋ U2 Weekly Activities 開頭
+    { id:"2026-10-04", title:"10 / 4", sub:"星期日 · 寫作本 房間", words:[
+      {w:"desk",       pos:"n.", zh:"書桌",   emoji:"🪑", chunks:""},
+      {w:"lamp",       pos:"n.", zh:"檯燈",   emoji:"💡", chunks:""},
       {w:"dresser",    pos:"n.", zh:"五斗櫃", emoji:"🗄️", chunks:"dress-er"},
       {w:"bookcase",   pos:"n.", zh:"書櫃",   emoji:"📚", chunks:"book-case"},
       {w:"mirror",     pos:"n.", zh:"鏡子",   emoji:"🪞", chunks:"mir-ror"},
       // 課本是 have an art lesson，複合名詞整個留
-      {w:"art lesson", pos:"n.", zh:"美術課", emoji:"🎨", chunks:""},
+      {w:"art lesson", pos:"n.", zh:"美術課", emoji:"🎨", chunks:""}
+    ]},
+
+    // 寫作本 U2 Weekly Activities（片語只收關鍵字）＋ 待補 VB p5 新字 2 個
+    { id:"2026-10-05", title:"10 / 5", sub:"星期一 · 寫作本 每週活動", words:[
       // ride my bike → 取 bike；go swimming → 取 swim；do puzzles → 取 puzzle
       {w:"bike",       pos:"n.", zh:"腳踏車", emoji:"🚲", chunks:""},
       {w:"swim",       pos:"v.", zh:"游泳",   emoji:"🏊", chunks:""},

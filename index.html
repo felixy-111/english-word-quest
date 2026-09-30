@@ -617,7 +617,7 @@ details.patbox:not([open]) > :not(summary){display:none !important;}
 <script>
 "use strict";
 const DATA = window.EN_WORDS || {units:[]};
-const APP_VER = "v14｜2026.09.25 CS3 字只在老師抽考出現";
+const APP_VER = "v15｜2026.10.01 每天改 6 個字";
 const LS_KEY = "ewq_state_v1";
 let store = loadStore();
 function loadStore(){ try{return JSON.parse(localStorage.getItem(LS_KEY))||{}}catch(e){return {}} }
@@ -1146,7 +1146,7 @@ function viewHome(){
 
 
 // ====== 抄寫單（練習本用）======
-// 一個日期單元＝當天要寫的字（CS3 是 5 個，M1 課本是 8 個），全部都要寫，不是只挑錯的。
+// 一個日期單元＝當天要寫的字（CS3 是 5 個，M1 課本 9 月是 8 個、10/1 起 6 個），全部都要寫，不是只挑錯的。
 // 進度存在 store.write[unitId].done[word]。
 const POS_ZH={"n.":"名詞","v.":"動詞","adj.":"形容詞","adv.":"副詞","aux.":"助動詞","num.":"數字","prep.":"介系詞","pron.":"代名詞"};
 function todayKey(){ return new Date().toLocaleDateString('en-CA'); }
@@ -2300,7 +2300,7 @@ function viewTeacher(){
     <div class="q-prompt">👩‍🏫 老師：加單字</div>
     <div class="twhint">一行一個字，最少「<b>英文 中文</b>」。要更精確可以加詞性和音塊，順序不拘：<br>
       <code>paper 紙 n. pa-per</code><br>
-      每 <b>8 個字排一天</b>，只排上課日（週一 / 三 / 五 / 日）。</div>
+      每 <b>6 個字排一天</b>，只排上課日（週一 / 三 / 五 / 日）。</div>
     <div style="margin:10px 0">從哪一天開始：
       <input type="date" class="twdate" id="twStart" value="${esc(T.start)}"></div>
     <textarea class="twta" id="twText" placeholder="plant 植物&#10;paper 紙 n. pa-per&#10;recycle 回收 v.">${esc(T.raw||"")}</textarea>
@@ -2368,11 +2368,11 @@ function viewTeacher(){
     localStorage.removeItem(TW_KEY); S.tw=null; viewTeacher();
   };
 
-  // 每 8 個字排一天，只排上課日（週一/三/五/日）
+  // 每 6 個字排一天（10/1 起，家長要求），只排上課日（週一/三/五/日）
   function assignDays(){
     let day=nextStudyDay(T.start);
     T.rows.forEach((r,i)=>{
-      if(i>0 && i%8===0) day=nextStudyDay(dateAdd(day,1));
+      if(i>0 && i%6===0) day=nextStudyDay(dateAdd(day,1));
       r.uid=day; r.day=unitLabel(day).title;
     });
   }
