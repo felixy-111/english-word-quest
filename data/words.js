@@ -94,7 +94,9 @@ window.EN_WORDS = {
       {w:"mail",   pos:"v.", zh:"寄（信）", emoji:"✉️", chunks:""},
       {w:"buy",    pos:"v.", zh:"買",       emoji:"💰", chunks:""},
       {w:"kick",   pos:"v.", zh:"踢",       emoji:"⚽", chunks:""},
-      {w:"color",  pos:"v.", zh:"著色",     emoji:"🖍️", chunks:"col-or"},
+      // VB p5 又出現 color（n. 顏色）和 color in（著色）。進度 key 只認單字，
+      // 不另建一筆，把名詞義併進來（2026-10-01）。
+      {w:"color",  pos:"v./n.", zh:"著色；顏色", emoji:"🖍️", chunks:"col-or"},
       {w:"cut",    pos:"v.", zh:"剪",       emoji:"✂️", chunks:""},
       {w:"glue",   pos:"v.", zh:"黏貼",     emoji:"🧴", chunks:""},
       {w:"fold",   pos:"v.", zh:"摺",       emoji:"📄", chunks:""}
@@ -240,13 +242,86 @@ window.EN_WORDS = {
       {w:"art lesson", pos:"n.", zh:"美術課", emoji:"🎨", chunks:""}
     ]},
 
-    // 寫作本 U2 Weekly Activities（片語只收關鍵字）＋ 待補 VB p5 新字 2 個
-    { id:"2026-10-05", title:"10 / 5", sub:"星期一 · 寫作本 每週活動", words:[
+    // 寫作本 U2 Weekly Activities（片語只收關鍵字）＋ VB p5 開頭 2 個
+    { id:"2026-10-05", title:"10 / 5", sub:"星期一 · 寫作本 每週活動 · VB 學校", words:[
       // ride my bike → 取 bike；go swimming → 取 swim；do puzzles → 取 puzzle
       {w:"bike",       pos:"n.", zh:"腳踏車", emoji:"🚲", chunks:""},
       {w:"swim",       pos:"v.", zh:"游泳",   emoji:"🏊", chunks:""},
       {w:"puzzle",     pos:"n.", zh:"拼圖",   emoji:"🧩", chunks:"puz-zle"},
-      {w:"yoga",       pos:"n.", zh:"瑜珈",   emoji:"🧘", chunks:"yo-ga"}
+      {w:"yoga",       pos:"n.", zh:"瑜珈",   emoji:"🧘", chunks:"yo-ga"},
+      // ── 以下是 VB p5 ──
+      // 黑白那本 Vocabulary (Seedlings) p.5「School」，Kerri 老師 9/30 指定的下次考試範圍。
+      // 共 47 字：desk、color、color in 已經在庫裡（color in 照片語規則取 color），
+      // look at 取 look，實際新增 44 字，照書上順序排，接在寫作本後面（太一 2026-10-01）。
+      {w:"alphabet", pos:"n.", zh:"字母（全部）", emoji:"🔤", chunks:"al-pha-bet"},
+      // w 不發音，用 silent 畫淡（同 knife）
+      {w:"answer",   pos:"n./v.", zh:"答案；回答", emoji:"💬", chunks:"an-swer", silent:"w"}
+    ]},
+
+    { id:"2026-10-07", title:"10 / 7", sub:"星期三 · VB 學校 1", words:[
+      {w:"ask",       pos:"v.", zh:"詢問；要求",       emoji:"🙋", chunks:""},
+      {w:"board",     pos:"n.", zh:"板子（黑板／白板）", emoji:"🧑‍🏫", chunks:""},
+      {w:"book",      pos:"n.", zh:"書本",             emoji:"📘", chunks:""},
+      {w:"eraser",    pos:"n.", zh:"橡皮擦",           emoji:"🧽", chunks:"e-ras-er"},
+      {w:"class",     pos:"n.", zh:"課堂；班級",       emoji:"🏫", chunks:""},
+      {w:"classroom", pos:"n.", zh:"教室",             emoji:"🏫", chunks:"class-room"}
+    ]},
+
+    { id:"2026-10-09", title:"10 / 9", sub:"星期五 · VB 學校 2", words:[
+      {w:"close",   pos:"v.", zh:"關閉",       emoji:"🚪", chunks:""},
+      {w:"correct", pos:"v.", zh:"訂正；正確", emoji:"✅", chunks:"cor-rect"},
+      {w:"cross",   pos:"v.", zh:"越過；交叉", emoji:"❌", chunks:""},
+      {w:"draw",    pos:"v.", zh:"畫",         emoji:"🎨", chunks:""},
+      {w:"English", pos:"n.", zh:"英語",       emoji:"🔤", chunks:"Eng-lish"},
+      {w:"example", pos:"n.", zh:"例子；範例", emoji:"📝", chunks:"ex-am-ple"}
+    ]},
+
+    { id:"2026-10-11", title:"10 / 11", sub:"星期日 · VB 學校 3", words:[
+      {w:"find",   pos:"v.", zh:"找到",     emoji:"🔍", chunks:""},
+      {w:"floor",  pos:"n.", zh:"樓層",     emoji:"🏢", chunks:""},
+      // k 不發音，做法同 knife：chunks 填整個字才保得住畫淡
+      {w:"know",   pos:"v.", zh:"知道",     emoji:"💡", chunks:"know", silent:"k"},
+      {w:"learn",  pos:"v.", zh:"學習",     emoji:"📖", chunks:""},
+      {w:"lesson", pos:"n.", zh:"課程",     emoji:"📚", chunks:"les-son"},
+      {w:"letter", pos:"n.", zh:"字母；信", emoji:"✉️", chunks:"let-ter"}
+    ]},
+
+    { id:"2026-10-12", title:"10 / 12", sub:"星期一 · VB 學校 4", words:[
+      {w:"line",   pos:"n.", zh:"線",   emoji:"➖", chunks:""},
+      // 書上是 look at，取關鍵字 look
+      {w:"look",   pos:"v.", zh:"看",   emoji:"👀", chunks:""},
+      {w:"number", pos:"n.", zh:"數字", emoji:"🔢", chunks:"num-ber"},
+      {w:"open",   pos:"v.", zh:"打開", emoji:"📂", chunks:"o-pen"},
+      {w:"page",   pos:"n.", zh:"頁",   emoji:"📄", chunks:""},
+      {w:"part",   pos:"n.", zh:"部分", emoji:"🧩", chunks:""}
+    ]},
+
+    { id:"2026-10-14", title:"10 / 14", sub:"星期三 · VB 學校 5", words:[
+      {w:"pen",      pos:"n.", zh:"筆",   emoji:"🖊️", chunks:""},
+      {w:"pencil",   pos:"n.", zh:"鉛筆", emoji:"✏️", chunks:"pen-cil"},
+      {w:"picture",  pos:"n.", zh:"圖畫", emoji:"🖼️", chunks:"pic-ture"},
+      {w:"question", pos:"n.", zh:"問題", emoji:"❓", chunks:"ques-tion"},
+      {w:"read",     pos:"v.", zh:"閱讀", emoji:"📖", chunks:""},
+      {w:"right",    pos:"adj.", zh:"正確的", emoji:"✔️", chunks:""}
+    ]},
+
+    { id:"2026-10-16", title:"10 / 16", sub:"星期五 · VB 學校 6", words:[
+      {w:"school",   pos:"n.", zh:"學校",       emoji:"🏫", chunks:""},
+      {w:"sentence", pos:"n.", zh:"句子",       emoji:"📝", chunks:"sen-tence"},
+      {w:"teacher",  pos:"n.", zh:"老師",       emoji:"👩‍🏫", chunks:"teach-er"},
+      {w:"tell",     pos:"v.", zh:"告訴",       emoji:"🗣️", chunks:""},
+      {w:"test",     pos:"n.", zh:"考試",       emoji:"📝", chunks:""},
+      {w:"tick",     pos:"v.", zh:"打勾（記號）", emoji:"☑️", chunks:""}
+    ]},
+
+    { id:"2026-10-18", title:"10 / 18", sub:"星期日 · VB 學校 7", words:[
+      {w:"understand", pos:"v.", zh:"了解；明白", emoji:"💡", chunks:"un-der-stand"},
+      {w:"wall",       pos:"n.", zh:"牆壁",       emoji:"🧱", chunks:""},
+      {w:"word",       pos:"n.", zh:"字；單字",   emoji:"🔤", chunks:""},
+      // w 不發音，同 knife 的做法
+      {w:"write",      pos:"v.", zh:"寫",         emoji:"✍️", chunks:"write", silent:"w"},
+      {w:"yes",        pos:"adv.", zh:"是；好",     emoji:"👍", chunks:""},
+      {w:"no",         pos:"adv.", zh:"不；沒有",   emoji:"👎", chunks:""}
     ]}
   ]
 };

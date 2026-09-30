@@ -35,6 +35,12 @@ VOICE_OVERRIDE = {
     "Türkiye":   _ALLISON,
 }
 
+# 單獨唸會唸錯的字：值＝實際丟給 say 的拼法。
+# close 單獨唸是形容詞 /kloʊs/，VB p5 教的是動詞「關閉」/kloʊz/（2026-10-01）。
+SAY_AS = {
+    "close": "cloze",
+}
+
 def say_clip(text, dest, voice=None):
     """唸一段話，回傳 mp3 路徑。用尾隨的 Stop. 逼出句尾下降語調後再切掉。"""
     raw = dest + ".aiff"
@@ -77,7 +83,7 @@ def main():
     made = 0
     for w, chunks in words:
         voice = VOICE_OVERRIDE.get(w)
-        jobs = [(w, os.path.join(AUDIO, f"{w}.mp3"))]
+        jobs = [(SAY_AS.get(w, w), os.path.join(AUDIO, f"{w}.mp3"))]
         parts = [p for p in chunks.split("-") if p]
         for i, p in enumerate(parts):
             jobs.append((chunk_text(p, i == len(parts) - 1), os.path.join(AUDIO, f"{w}_c{i}.mp3")))
