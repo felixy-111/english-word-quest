@@ -322,6 +322,62 @@ window.EN_WORDS = {
       {w:"write",      pos:"v.", zh:"寫",         emoji:"✍️", chunks:"write", silent:"w"},
       {w:"yes",        pos:"adv.", zh:"是；好",     emoji:"👍", chunks:""},
       {w:"no",         pos:"adv.", zh:"不；沒有",   emoji:"👎", chunks:""}
+    ]},
+
+    // ─────────────────────────────────────────────────────────────────────
+    // 寫作本 Seedlings U4–U8 的 Vocabulary 頁（太一 2026-10-04 拍照，p31／39／47／55／63）。
+    // 照書的順序接在 VB 後面，一天 6 個字，不插隊。
+    // 已在庫不重收：movie theater、supermarket（9/16）、hard/soft/heavy/light（9/30，
+    // 主課本 Lesson 4 Adjectives 那頁也是這四個）、plant/recycle/paper/plastic（9/12）。
+    // U6 五感只收原形（學生在書上自己補了過去式，太一決定不收）。
+    // U7 片語取關鍵字（太一 2026-10-04）：save water→save、waste paper→waste、
+    // use plastic→use、take long baths→bath；中文寫出片語情境，避免 fight fires 那種教錯。
+    // ─────────────────────────────────────────────────────────────────────
+
+    // 寫作本 U4 My Favorite Celebrity
+    { id:"2026-10-19", title:"10 / 19", sub:"星期一 · 寫作本 名人職業", words:[
+      {w:"singer",     pos:"n.", zh:"歌手",           emoji:"🎤", chunks:"sing-er"},
+      // 書上是大寫 Y、T，拼字照書
+      {w:"YouTuber",   pos:"n.", zh:"YouTuber（拍影片的人）", emoji:"📹", chunks:"You-Tu-ber"},
+      {w:"pro gamer",  pos:"n.", zh:"職業電競選手",   emoji:"🎮", chunks:""},
+      {w:"athlete",    pos:"n.", zh:"運動員",         emoji:"🏃", chunks:"ath-lete"},
+      {w:"cartoonist", pos:"n.", zh:"漫畫家",         emoji:"✏️", chunks:"car-toon-ist"},
+      {w:"chef",       pos:"n.", zh:"廚師",           emoji:"👨‍🍳", chunks:""}
+    ]},
+
+    // 寫作本 U5 Pocket Money ＋ U6 My Tasty Poem 開頭
+    { id:"2026-10-21", title:"10 / 21", sub:"星期三 · 寫作本 商店 · 五感", words:[
+      {w:"bakery",     pos:"n.", zh:"麵包店", emoji:"🥐", chunks:"ba-ker-y"},
+      {w:"hair salon", pos:"n.", zh:"美髮院", emoji:"💇", chunks:""},
+      {w:"bookstore",  pos:"n.", zh:"書店",   emoji:"📚", chunks:"book-store"},
+      {w:"aquarium",   pos:"n.", zh:"水族館", emoji:"🐠", chunks:"a-quar-i-um"},
+      {w:"see",        pos:"v.", zh:"看見",   emoji:"👀", chunks:""},
+      {w:"smell",      pos:"v.", zh:"聞",     emoji:"👃", chunks:""}
+    ]},
+
+    // 寫作本 U6 剩下 ＋ U7 Save the Earth（片語取關鍵字）
+    { id:"2026-10-23", title:"10 / 23", sub:"星期五 · 寫作本 五感 · 救地球", words:[
+      {w:"feel",  pos:"v.", zh:"摸；感覺",       emoji:"✋", chunks:""},
+      {w:"taste", pos:"v.", zh:"嚐",             emoji:"👅", chunks:""},
+      {w:"hear",  pos:"v.", zh:"聽見",           emoji:"👂", chunks:""},
+      {w:"save",  pos:"v.", zh:"節省（水）",     emoji:"🚰", chunks:""},
+      {w:"waste", pos:"v.", zh:"浪費（紙）",     emoji:"🗑️", chunks:""},
+      {w:"use",   pos:"v.", zh:"使用（塑膠）",   emoji:"🥤", chunks:""}
+    ]},
+
+    // 寫作本 U7 剩下 ＋ U8 Field Day
+    { id:"2026-10-25", title:"10 / 25", sub:"星期日 · 寫作本 救地球 · 運動", words:[
+      {w:"bath",       pos:"n.", zh:"洗澡（泡澡）", emoji:"🛁", chunks:""},
+      {w:"soccer",     pos:"n.", zh:"足球",   emoji:"⚽", chunks:"soc-cer"},
+      {w:"baseball",   pos:"n.", zh:"棒球",   emoji:"⚾", chunks:"base-ball"},
+      {w:"tennis",     pos:"n.", zh:"網球",   emoji:"🎾", chunks:"ten-nis"},
+      {w:"basketball", pos:"n.", zh:"籃球",   emoji:"🏀", chunks:"bas-ket-ball"},
+      {w:"hockey",     pos:"n.", zh:"曲棍球", emoji:"🏒", chunks:"hock-ey"}
+    ]},
+
+    // 25 個字切完剩這 1 個，不硬塞進 10/25 破壞一天 6 字
+    { id:"2026-10-26", title:"10 / 26", sub:"星期一 · 寫作本 運動", words:[
+      {w:"badminton",  pos:"n.", zh:"羽毛球", emoji:"🏸", chunks:"bad-min-ton"}
     ]}
   ]
 };

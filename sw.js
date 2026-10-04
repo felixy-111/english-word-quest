@@ -1,4 +1,4 @@
-const CACHE = "ewq-v21";   // VB p5 學校 44 字。改 index.html、words.js 或音檔就要動這行
+const CACHE = "ewq-v22";   // 寫作本 U4–U8 25 字。改 index.html、words.js 或音檔就要動這行
 const ASSETS = ["./", "index.html", "data/words.js", "manifest.webmanifest", "icon-192.png", "icon-512.png", "apple-touch-icon.png"];
 self.addEventListener("install", e => {
   // cache:"reload" 強制繞過瀏覽器 HTTP 快取。不加的話 addAll 可能撈到快取裡的
