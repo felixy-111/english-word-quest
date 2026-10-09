@@ -44,7 +44,10 @@ SAY_AS = {
 def say_clip(text, dest, voice=None):
     """唸一段話，回傳 mp3 路徑。用尾隨的 Stop. 逼出句尾下降語調後再切掉。"""
     raw = dest + ".aiff"
-    subprocess.run(["say", "-v", voice or VOICE, "-r", RATE, "-o", raw, text + ". Stop."],
+    # [[slnc 400]] 強制停頓：有些字（bike、color 的音塊…）會跟 Stop 黏在一起唸，
+    # 中間沒有靜音可切，Stop 的開頭就殘留在檔尾（2026-10-09 太一聽到 bike 抓出來）。
+    # 加了停頓語調仍是句尾下降（音訊跟單獨唸 "bike." 不同），只是切得乾淨。
+    subprocess.run(["say", "-v", voice or VOICE, "-r", RATE, "-o", raw, text + ". [[slnc 400]] Stop."],
                    check=True, capture_output=True)
     p = subprocess.run(["ffmpeg", "-i", raw, "-af", "silencedetect=noise=-38dB:d=0.12",
                         "-f", "null", "-"], capture_output=True, text=True)
