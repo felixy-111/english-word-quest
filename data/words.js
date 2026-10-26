@@ -21,7 +21,7 @@
 // 老師上課現場加的字走 App 裡的「👩‍🏫 老師：加單字」，存在裝置的 localStorage，
 // 匯出後再灌進這個檔才會跟著上線給孩子。
 window.EN_WORDS = {
-  version: "cs3+m1-2026-10-01",
+  version: "cs3+m1-2026-10-26",
   units: [
     // 來源：安親班 CS3（9/7，Lily 老師）指定的拼字考單字。主題 Save the Earth。
     { id:"2026-09-12", title:"9 / 12", sub:"星期六", words:[
@@ -378,6 +378,100 @@ window.EN_WORDS = {
     // 25 個字切完剩這 1 個，不硬塞進 10/25 破壞一天 6 字
     { id:"2026-10-26", title:"10 / 26", sub:"星期一 · 寫作本 運動", words:[
       {w:"badminton",  pos:"n.", zh:"羽毛球", emoji:"🏸", chunks:"bad-min-ton"}
+    ]},
+
+    // ─────────────────────────────────────────────────────────────────────
+    // VB（黑白那本 Vocabulary Seedlings）p6 運動休閒＋p7 交通／大自然／顏色（太一 2026-10-26 拍照）。
+    // p7 右下「Simple expressions 簡單對答」太一指定不收。照書的順序，一天 6 個字，從 10/28 接。
+    // 已在庫不重收：badminton、baseball、basketball、soccer、tennis、hockey、kick、book、read、
+    // swim、watch、picture、bike、fly；guitar、hit 在 CS3（teacherOnly）裡。run 兩頁各出現一次，收一筆。
+    // listen to／play with 只收 listen／play；grey 照書拼（美式 gray 寫在中文裡）。
+    // ─────────────────────────────────────────────────────────────────────
+
+    { id:"2026-10-28", title:"10 / 28", sub:"星期三 · VB 運動休閒 1", words:[
+      {w:"game",     pos:"n.", zh:"遊戲",   emoji:"🎲", chunks:""},
+      {w:"ball",     pos:"n.", zh:"球",     emoji:"🏐", chunks:""},
+      {w:"beach",    pos:"n.", zh:"海灘",   emoji:"🏖️", chunks:""},
+      {w:"bounce",   pos:"v.", zh:"彈跳",   emoji:"⛹️", chunks:""},
+      {w:"camera",   pos:"n.", zh:"照相機", emoji:"📷", chunks:"cam-er-a"},
+      {w:"doll",     pos:"n.", zh:"玩偶",   emoji:"🪆", chunks:""}
+    ]},
+
+    { id:"2026-10-30", title:"10 / 30", sub:"星期五 · VB 運動休閒 2", words:[
+      {w:"enjoy",    pos:"v.", zh:"享受",       emoji:"😊", chunks:"en-joy"},
+      {w:"favorite", pos:"adj.", zh:"最喜愛的", emoji:"❤️", chunks:"fa-vor-ite"},
+      {w:"fish",     pos:"v./n.", zh:"釣魚；魚肉", emoji:"🎣", chunks:""},
+      {w:"run",      pos:"v.", zh:"跑；跑步",   emoji:"🏃", chunks:""},
+      {w:"sing",     pos:"v.", zh:"唱歌",       emoji:"🎵", chunks:""},
+      {w:"song",     pos:"n.", zh:"歌曲",       emoji:"🎶", chunks:""}
+    ]},
+
+    { id:"2026-11-01", title:"11 / 1", sub:"星期日 · VB 運動休閒 3", words:[
+      {w:"sport",        pos:"n.", zh:"運動", emoji:"🏅", chunks:""},
+      {w:"story",        pos:"n.", zh:"故事", emoji:"🧚", chunks:"sto-ry"},
+      {w:"table tennis", pos:"n.", zh:"桌球", emoji:"🏓", chunks:""},
+      {w:"toy",          pos:"n.", zh:"玩具", emoji:"🧸", chunks:""},
+      // 書上中文寫「足球」（英式說法），美式 football 是美式足球
+      {w:"football",     pos:"n.", zh:"足球（英式說法）", emoji:"⚽", chunks:"foot-ball"},
+      {w:"hobby",        pos:"n.", zh:"嗜好", emoji:"🧩", chunks:"hob-by"}
+    ]},
+
+    { id:"2026-11-02", title:"11 / 2", sub:"星期一 · VB 運動休閒 4", words:[
+      {w:"kite",   pos:"n.", zh:"風箏",   emoji:"🪁", chunks:""},
+      // t 不發音，同 answer 的做法
+      {w:"listen", pos:"v.", zh:"聽（listen to）", emoji:"🎧", chunks:"lis-ten", silent:"t"},
+      {w:"paint",  pos:"v.", zh:"畫（上顏料）", emoji:"🎨", chunks:""},
+      {w:"photo",  pos:"n.", zh:"照片",   emoji:"📸", chunks:"pho-to"},
+      {w:"piano",  pos:"n.", zh:"鋼琴",   emoji:"🎹", chunks:"pi-an-o"},
+      {w:"play",   pos:"v.", zh:"玩（play with 跟…玩）", emoji:"🤹", chunks:""}
+    ]},
+
+    { id:"2026-11-04", title:"11 / 4", sub:"星期三 · VB 休閒 · 交通", words:[
+      {w:"radio",      pos:"n.", zh:"收音機",     emoji:"📻", chunks:"ra-di-o"},
+      {w:"boat",       pos:"n.", zh:"船",         emoji:"⛵", chunks:""},
+      {w:"bus",        pos:"n.", zh:"巴士；公車", emoji:"🚌", chunks:""},
+      {w:"car",        pos:"n.", zh:"車；汽車",   emoji:"🚗", chunks:""},
+      {w:"go",         pos:"v.", zh:"走；去",     emoji:"➡️", chunks:""},
+      {w:"helicopter", pos:"n.", zh:"直升機",     emoji:"🚁", chunks:"hel-i-cop-ter"}
+    ]},
+
+    { id:"2026-11-06", title:"11 / 6", sub:"星期五 · VB 交通", words:[
+      // lorry 是英式說法（美式 truck）
+      {w:"lorry",     pos:"n.", zh:"卡車",         emoji:"🚚", chunks:"lor-ry"},
+      {w:"motorbike", pos:"n.", zh:"摩托車；機車", emoji:"🏍️", chunks:"mo-tor-bike"},
+      {w:"plane",     pos:"n.", zh:"飛機",         emoji:"✈️", chunks:""},
+      {w:"ride",      pos:"v.", zh:"騎；乘坐",     emoji:"🚴", chunks:""},
+      {w:"train",     pos:"n.", zh:"火車",         emoji:"🚆", chunks:""},
+      // l 不發音，同 know／write 的做法
+      {w:"walk",      pos:"v.", zh:"走路",         emoji:"🚶", chunks:"walk", silent:"l"}
+    ]},
+
+    { id:"2026-11-08", title:"11 / 8", sub:"星期日 · VB 大自然 · 顏色", words:[
+      {w:"sea",     pos:"n.", zh:"海洋", emoji:"🌊", chunks:""},
+      {w:"street",  pos:"n.", zh:"街道", emoji:"🛣️", chunks:""},
+      {w:"sun",     pos:"n.", zh:"太陽", emoji:"☀️", chunks:""},
+      {w:"rainbow", pos:"n.", zh:"彩虹", emoji:"🌈", chunks:"rain-bow"},
+      {w:"black",   pos:"adj.", zh:"黑色", emoji:"⚫", chunks:""},
+      {w:"blue",    pos:"adj.", zh:"藍色", emoji:"🔵", chunks:""}
+    ]},
+
+    { id:"2026-11-09", title:"11 / 9", sub:"星期一 · VB 顏色 1", words:[
+      {w:"brown",  pos:"adj.", zh:"棕色；咖啡色", emoji:"🟤", chunks:""},
+      {w:"green",  pos:"adj.", zh:"綠色", emoji:"🟢", chunks:""},
+      {w:"grey",   pos:"adj.", zh:"灰色（美式拼 gray）", emoji:"🩶", chunks:""},
+      {w:"orange", pos:"adj.", zh:"橘色", emoji:"🟠", chunks:"or-ange"},
+      {w:"pink",   pos:"adj.", zh:"粉紅色", emoji:"🩷", chunks:""},
+      {w:"purple", pos:"adj.", zh:"紫色", emoji:"🟣", chunks:"pur-ple"}
+    ]},
+
+    // 28 個字切完剩 5 個
+    { id:"2026-11-11", title:"11 / 11", sub:"星期三 · VB 顏色 2", words:[
+      {w:"red",    pos:"adj.", zh:"紅色", emoji:"🔴", chunks:""},
+      {w:"white",  pos:"adj.", zh:"白色", emoji:"⚪", chunks:""},
+      {w:"yellow", pos:"adj.", zh:"黃色", emoji:"🟡", chunks:"yel-low"},
+      // indigo／violet 是彩虹七色的靛、紫；violet 跟 purple 書上都寫紫色，中文加註才分得出來
+      {w:"indigo", pos:"adj.", zh:"靛色（彩虹的靛）", emoji:"🔷", chunks:"in-di-go"},
+      {w:"violet", pos:"adj.", zh:"紫色（彩虹的紫）", emoji:"🪻", chunks:"vi-o-let"}
     ]}
   ]
 };
