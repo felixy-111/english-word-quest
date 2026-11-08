@@ -1,4 +1,4 @@
-const CACHE = "ewq-v24";   // 加 VB p6–p7 53 字（10/28–11/11）。改 index.html、words.js 或音檔就要動這行
+const CACHE = "ewq-v25";   // 月份 12 字插隊 11/9、11/11，顏色順延。改 index.html、words.js 或音檔就要動這行
 const ASSETS = ["./", "index.html", "data/words.js", "manifest.webmanifest", "icon-192.png", "icon-512.png", "apple-touch-icon.png"];
 self.addEventListener("install", e => {
   // cache:"reload" 強制繞過瀏覽器 HTTP 快取。不加的話 addAll 可能撈到快取裡的

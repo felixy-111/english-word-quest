@@ -21,7 +21,7 @@
 // 老師上課現場加的字走 App 裡的「👩‍🏫 老師：加單字」，存在裝置的 localStorage，
 // 匯出後再灌進這個檔才會跟著上線給孩子。
 window.EN_WORDS = {
-  version: "cs3+m1-2026-10-26",
+  version: "cs3+m1-2026-11-08",
   units: [
     // 來源：安親班 CS3（9/7，Lily 老師）指定的拼字考單字。主題 Save the Earth。
     { id:"2026-09-12", title:"9 / 12", sub:"星期六", words:[
@@ -455,7 +455,31 @@ window.EN_WORDS = {
       {w:"blue",    pos:"adj.", zh:"藍色", emoji:"🔵", chunks:""}
     ]},
 
-    { id:"2026-11-09", title:"11 / 9", sub:"星期一 · VB 顏色 1", words:[
+    // ─────────────────────────────────────────────────────────────────────
+    // WR3 月份（Kerri 11/5 上課教 Months，Next Test: Months，下次上課約 11/12 週四）。
+    // 太一 2026-11-08 要求提前插隊：11/9、11/11 改學月份，原本的顏色 11 字順延到 11/13、11/15。
+    // 月份字首大寫照拼；進度 key 會轉小寫，跟 may（可以）這類字不撞是因為庫裡沒有。
+    // ─────────────────────────────────────────────────────────────────────
+    { id:"2026-11-09", title:"11 / 9", sub:"星期一 · 月份 1", words:[
+      {w:"January",  pos:"n.", zh:"一月", emoji:"⛄", chunks:"Jan-u-ar-y"},
+      {w:"February", pos:"n.", zh:"二月", emoji:"🧧", chunks:"Feb-ru-ar-y"},
+      {w:"March",    pos:"n.", zh:"三月", emoji:"🌸", chunks:""},
+      {w:"April",    pos:"n.", zh:"四月", emoji:"🐣", chunks:"A-pril"},
+      {w:"May",      pos:"n.", zh:"五月", emoji:"🌷", chunks:""},
+      {w:"June",     pos:"n.", zh:"六月", emoji:"🌞", chunks:""}
+    ]},
+
+    { id:"2026-11-11", title:"11 / 11", sub:"星期三 · 月份 2", words:[
+      {w:"July",      pos:"n.", zh:"七月",   emoji:"🍉", chunks:"Ju-ly"},
+      {w:"August",    pos:"n.", zh:"八月",   emoji:"🏖️", chunks:"Au-gust"},
+      {w:"September", pos:"n.", zh:"九月",   emoji:"🎒", chunks:"Sep-tem-ber"},
+      {w:"October",   pos:"n.", zh:"十月",   emoji:"🎃", chunks:"Oc-to-ber"},
+      {w:"November",  pos:"n.", zh:"十一月", emoji:"🍁", chunks:"No-vem-ber"},
+      {w:"December",  pos:"n.", zh:"十二月", emoji:"🎄", chunks:"De-cem-ber"}
+    ]},
+
+    // 原排 11/9，讓位給月份
+    { id:"2026-11-13", title:"11 / 13", sub:"星期五 · VB 顏色 1", words:[
       {w:"brown",  pos:"adj.", zh:"棕色；咖啡色", emoji:"🟤", chunks:""},
       {w:"green",  pos:"adj.", zh:"綠色", emoji:"🟢", chunks:""},
       {w:"grey",   pos:"adj.", zh:"灰色（美式拼 gray）", emoji:"🩶", chunks:""},
@@ -464,8 +488,8 @@ window.EN_WORDS = {
       {w:"purple", pos:"adj.", zh:"紫色", emoji:"🟣", chunks:"pur-ple"}
     ]},
 
-    // 28 個字切完剩 5 個
-    { id:"2026-11-11", title:"11 / 11", sub:"星期三 · VB 顏色 2", words:[
+    // 28 個字切完剩 5 個；原排 11/11，讓位給月份
+    { id:"2026-11-15", title:"11 / 15", sub:"星期日 · VB 顏色 2", words:[
       {w:"red",    pos:"adj.", zh:"紅色", emoji:"🔴", chunks:""},
       {w:"white",  pos:"adj.", zh:"白色", emoji:"⚪", chunks:""},
       {w:"yellow", pos:"adj.", zh:"黃色", emoji:"🟡", chunks:"yel-low"},
