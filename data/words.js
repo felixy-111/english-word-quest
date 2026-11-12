@@ -496,6 +496,48 @@ window.EN_WORDS = {
       // indigo／violet 是彩虹七色的靛、紫；violet 跟 purple 書上都寫紫色，中文加註才分得出來
       {w:"indigo", pos:"adj.", zh:"靛色（彩虹的靛）", emoji:"🔷", chunks:"in-di-go"},
       {w:"violet", pos:"adj.", zh:"紫色（彩虹的紫）", emoji:"🪻", chunks:"vi-o-let"}
+    ]},
+
+    // ─────────────────────────────────────────────────────────────────────
+    // 星期 7 字（太一 2026-11-13 要求接在排程後面、不插隊；拆 6＋1）。
+    // Wednesday 第一個 d 不發音，比照 knife 用 silent 畫淡（indexOf 抓到的正是第一個 d）。
+    // ─────────────────────────────────────────────────────────────────────
+    { id:"2026-11-16", title:"11 / 16", sub:"星期一 · 星期 1", words:[
+      {w:"Monday",    pos:"n.", zh:"星期一", emoji:"1️⃣", chunks:"Mon-day"},
+      {w:"Tuesday",   pos:"n.", zh:"星期二", emoji:"2️⃣", chunks:"Tues-day"},
+      {w:"Wednesday", pos:"n.", zh:"星期三", emoji:"3️⃣", chunks:"Wednes-day", silent:"d"},
+      {w:"Thursday",  pos:"n.", zh:"星期四", emoji:"4️⃣", chunks:"Thurs-day"},
+      {w:"Friday",    pos:"n.", zh:"星期五", emoji:"5️⃣", chunks:"Fri-day"},
+      {w:"Saturday",  pos:"n.", zh:"星期六", emoji:"6️⃣", chunks:"Sat-ur-day"}
+    ]},
+
+    // 以下延伸成「時間」主題（太一 2026-11-13 拍板：day、time 太簡單換成 holiday、noon；fall 用美式）
+    { id:"2026-11-18", title:"11 / 18", sub:"星期三 · 星期 2 · 時間", words:[
+      {w:"Sunday",    pos:"n.", zh:"星期日", emoji:"☀️", chunks:"Sun-day"},
+      {w:"today",     pos:"n.", zh:"今天",   emoji:"📍", chunks:"to-day"},
+      {w:"tomorrow",  pos:"n.", zh:"明天",   emoji:"➡️", chunks:"to-mor-row"},
+      {w:"yesterday", pos:"n.", zh:"昨天",   emoji:"⬅️", chunks:"yes-ter-day"},
+      {w:"week",      pos:"n.", zh:"一週；星期", emoji:"📆", chunks:""},
+      {w:"weekend",   pos:"n.", zh:"週末",   emoji:"🎉", chunks:"week-end"}
+    ]},
+
+    { id:"2026-11-20", title:"11 / 20", sub:"星期五 · 一天的時段", words:[
+      {w:"morning",   pos:"n.", zh:"早上",   emoji:"🌅", chunks:"morn-ing"},
+      {w:"noon",      pos:"n.", zh:"中午",   emoji:"🕛", chunks:""},
+      {w:"afternoon", pos:"n.", zh:"下午",   emoji:"🌤️", chunks:"af-ter-noon"},
+      {w:"evening",   pos:"n.", zh:"傍晚；晚上", emoji:"🌇", chunks:"eve-ning"},
+      {w:"night",     pos:"n.", zh:"夜晚",   emoji:"🌙", chunks:""},
+      {w:"holiday",   pos:"n.", zh:"假日",   emoji:"🏖️", chunks:"hol-i-day"}
+    ]},
+
+    { id:"2026-11-22", title:"11 / 22", sub:"星期日 · 一年與季節", words:[
+      {w:"spring",    pos:"n.", zh:"春天",   emoji:"🌱", chunks:""},
+      {w:"summer",    pos:"n.", zh:"夏天",   emoji:"🍦", chunks:"sum-mer"},
+      // fall 也是「跌倒」，但同拼法只能一筆，只放秋天
+      {w:"fall",      pos:"n.", zh:"秋天（英式寫 autumn）", emoji:"🍂", chunks:""},
+      {w:"winter",    pos:"n.", zh:"冬天",   emoji:"❄️", chunks:"win-ter"},
+      {w:"month",     pos:"n.", zh:"月（一個月）", emoji:"🗓️", chunks:""},
+      {w:"year",      pos:"n.", zh:"年",     emoji:"🎆", chunks:""}
     ]}
   ]
 };
