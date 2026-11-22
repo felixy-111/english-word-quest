@@ -39,6 +39,8 @@ VOICE_OVERRIDE = {
 # close 單獨唸是形容詞 /kloʊs/，VB p5 教的是動詞「關閉」/kloʊz/（2026-10-01）。
 SAY_AS = {
     "close": "cloze",
+    # live 單獨唸可能變形容詞 /laɪv/，VB p3/p12 教的是動詞「住」/lɪv/（2026-11-22）
+    "live": "liv",
 }
 
 def say_clip(text, dest, voice=None):

@@ -538,6 +538,227 @@ window.EN_WORDS = {
       {w:"winter",    pos:"n.", zh:"冬天",   emoji:"❄️", chunks:"win-ter"},
       {w:"month",     pos:"n.", zh:"月（一個月）", emoji:"🗓️", chunks:""},
       {w:"year",      pos:"n.", zh:"年",     emoji:"🎆", chunks:""}
+    ]},
+
+    // ─────────────────────────────────────────────────────────────────────
+    // 2026-11-22 加字（太一確認）：比較級 4＋VB p8–9 16＋p10 方位 9＋p11–12 動詞 26
+    // ＋回頭補 p2–4 102 字，從 11/23 起一三五日、每天 6 字。
+    // 不收：then/well、數字、a/the/this 等虛詞、Mr./Mrs./Ms./Miss、mummy、theater（有 movie theater）；
+    // 已有的字（look、play、listen、point、orange、fish、camera、radio…）不重複；
+    // look at／point to／listen to／play with 併入已有的原形。
+    // talk 比照 walk 標 silent l；cupboard 的 p 不發音、而且切 cup-board 音塊會唸成「杯子」，
+    // 所以 chunks 填整字＋silent（同 knife）；breakfast 唸 brek，切 break 會教錯，留空。
+    // ─────────────────────────────────────────────────────────────────────
+    { id:"2026-11-23", title:"11 / 23", sub:"星期一 · 比較級 · VB 物品 1", words:[
+      {w:"softer", pos:"adj.", zh:"比較軟的", emoji:"🧸", chunks:"soft-er"},
+      {w:"harder", pos:"adj.", zh:"比較硬的", emoji:"🪨", chunks:"hard-er"},
+      {w:"heavier", pos:"adj.", zh:"比較重的", emoji:"🏋️", chunks:"heav-i-er"},
+      {w:"lighter", pos:"adj.", zh:"比較輕的", emoji:"🪶", chunks:"light-er"},
+      {w:"computer", pos:"n.", zh:"電腦", emoji:"💻", chunks:"com-pu-ter"},
+      {w:"day", pos:"n.", zh:"天；日子", emoji:"📅", chunks:""}
+    ]},
+    { id:"2026-11-25", title:"11 / 25", sub:"星期三 · VB 物品 2 · VB 形容詞 1", words:[
+      {w:"monster", pos:"n.", zh:"怪物", emoji:"👾", chunks:"mon-ster"},
+      {w:"robot", pos:"n.", zh:"機器人", emoji:"🤖", chunks:"ro-bot"},
+      {w:"bag", pos:"n.", zh:"包包；書包", emoji:"🎒", chunks:""},
+      {w:"box", pos:"n.", zh:"箱子", emoji:"📦", chunks:""},
+      {w:"beautiful", pos:"adj.", zh:"漂亮的", emoji:"🌸", chunks:"beau-ti-ful"},
+      {w:"big", pos:"adj.", zh:"大的", emoji:"🐘", chunks:""}
+    ]},
+    { id:"2026-11-27", title:"11 / 27", sub:"星期五 · VB 形容詞 2", words:[
+      {w:"small", pos:"adj.", zh:"小的", emoji:"🐜", chunks:""},
+      {w:"good", pos:"adj.", zh:"好的", emoji:"👍", chunks:""},
+      {w:"long", pos:"adj.", zh:"長的", emoji:"📏", chunks:""},
+      {w:"new", pos:"adj.", zh:"新的", emoji:"✨", chunks:""},
+      {w:"happy", pos:"adj.", zh:"快樂的", emoji:"😄", chunks:"hap-py"},
+      {w:"sad", pos:"adj.", zh:"難過的", emoji:"😢", chunks:""}
+    ]},
+    { id:"2026-11-29", title:"11 / 29", sub:"星期日 · VB 形容詞 3 · VB 方位 1", words:[
+      {w:"ugly", pos:"adj.", zh:"醜的", emoji:"👹", chunks:"ug-ly"},
+      {w:"sorry", pos:"adj.", zh:"對不起；抱歉的", emoji:"🙇", chunks:"sor-ry"},
+      {w:"in", pos:"prep.", zh:"在…裡面", emoji:"📥", chunks:""},
+      {w:"on", pos:"prep.", zh:"在…上面", emoji:"🔝", chunks:""},
+      {w:"under", pos:"prep.", zh:"在…下面", emoji:"⬇️", chunks:"un-der"},
+      {w:"behind", pos:"prep.", zh:"在…後面", emoji:"🔙", chunks:"be-hind"}
+    ]},
+    { id:"2026-11-30", title:"11 / 30", sub:"星期一 · VB 方位 2 · VB 動詞 1", words:[
+      {w:"in front of", pos:"prep.", zh:"在…前面", emoji:"⏩", chunks:""},
+      {w:"between", pos:"prep.", zh:"在…中間", emoji:"↔️", chunks:"be-tween"},
+      {w:"next to", pos:"prep.", zh:"在…旁邊", emoji:"👫", chunks:""},
+      {w:"at", pos:"prep.", zh:"在（某個地點或時間）", emoji:"📍", chunks:""},
+      {w:"with", pos:"prep.", zh:"和…一起", emoji:"🤝", chunks:""},
+      {w:"say", pos:"v.", zh:"說", emoji:"💬", chunks:""}
+    ]},
+    { id:"2026-12-02", title:"12 / 2", sub:"星期三 · VB 動詞 2", words:[
+      {w:"talk", pos:"v.", zh:"說話；聊天", emoji:"🗣️", chunks:"talk", silent:"l"},
+      {w:"do", pos:"v.", zh:"做", emoji:"✅", chunks:""},
+      {w:"have", pos:"v.", zh:"有；吃", emoji:"🤲", chunks:""},
+      {w:"give", pos:"v.", zh:"給", emoji:"🎁", chunks:""},
+      {w:"want", pos:"v.", zh:"想要", emoji:"🙋", chunks:""},
+      {w:"like", pos:"v.", zh:"喜歡", emoji:"💗", chunks:""}
+    ]},
+    { id:"2026-12-04", title:"12 / 4", sub:"星期五 · VB 動詞 3", words:[
+      {w:"love", pos:"v.", zh:"愛", emoji:"❤️", chunks:""},
+      {w:"try", pos:"v.", zh:"試試看", emoji:"🤔", chunks:""},
+      {w:"show", pos:"v.", zh:"給…看；展示", emoji:"🖼️", chunks:""},
+      {w:"start", pos:"v.", zh:"開始", emoji:"🏁", chunks:""},
+      {w:"stop", pos:"v.", zh:"停止", emoji:"🛑", chunks:""},
+      {w:"sit", pos:"v.", zh:"坐下", emoji:"🪑", chunks:""}
+    ]},
+    { id:"2026-12-06", title:"12 / 6", sub:"星期日 · VB 動詞 4", words:[
+      {w:"stand", pos:"v.", zh:"站", emoji:"🧍", chunks:""},
+      {w:"jump", pos:"v.", zh:"跳", emoji:"🦘", chunks:""},
+      {w:"catch", pos:"v.", zh:"接住；抓", emoji:"🧤", chunks:""},
+      {w:"throw", pos:"v.", zh:"丟；投", emoji:"🤾", chunks:""},
+      {w:"pick up", pos:"v.", zh:"撿起來", emoji:"🫳", chunks:""},
+      {w:"point", pos:"v.", zh:"指（出）", emoji:"👉", chunks:""}
+    ]},
+    { id:"2026-12-07", title:"12 / 7", sub:"星期一 · VB 動詞 5", words:[
+      {w:"add", pos:"v.", zh:"加；增加", emoji:"➕", chunks:""},
+      {w:"spell", pos:"v.", zh:"拼（字）", emoji:"🔤", chunks:""},
+      {w:"wear", pos:"v.", zh:"穿；戴", emoji:"👕", chunks:""},
+      {w:"live", pos:"v.", zh:"住；生活", emoji:"🏡", chunks:""},
+      {w:"eat", pos:"v.", zh:"吃", emoji:"🍽️", chunks:""},
+      {w:"drink", pos:"v.", zh:"喝", emoji:"🥤", chunks:""}
+    ]},
+    { id:"2026-12-09", title:"12 / 9", sub:"星期三 · VB 動詞 6 · VB 動物 1", words:[
+      {w:"sleep", pos:"v.", zh:"睡覺", emoji:"😴", chunks:""},
+      {w:"animal", pos:"n.", zh:"動物", emoji:"🐾", chunks:"an-i-mal"},
+      {w:"bird", pos:"n.", zh:"鳥", emoji:"🐦", chunks:""},
+      {w:"cat", pos:"n.", zh:"貓", emoji:"🐱", chunks:""},
+      {w:"dog", pos:"n.", zh:"狗", emoji:"🐶", chunks:""},
+      {w:"chicken", pos:"n.", zh:"雞；雞肉", emoji:"🐔", chunks:"chick-en"}
+    ]},
+    { id:"2026-12-11", title:"12 / 11", sub:"星期五 · VB 動物 2", words:[
+      {w:"cow", pos:"n.", zh:"乳牛", emoji:"🐄", chunks:""},
+      {w:"duck", pos:"n.", zh:"鴨子", emoji:"🦆", chunks:""},
+      {w:"goat", pos:"n.", zh:"山羊", emoji:"🐐", chunks:""},
+      {w:"sheep", pos:"n.", zh:"綿羊", emoji:"🐑", chunks:""},
+      {w:"horse", pos:"n.", zh:"馬", emoji:"🐴", chunks:""},
+      {w:"mouse", pos:"n.", zh:"老鼠（複數 mice）", emoji:"🐭", chunks:""}
+    ]},
+    { id:"2026-12-13", title:"12 / 13", sub:"星期日 · VB 動物 3", words:[
+      {w:"frog", pos:"n.", zh:"青蛙", emoji:"🐸", chunks:""},
+      {w:"snake", pos:"n.", zh:"蛇", emoji:"🐍", chunks:""},
+      {w:"lizard", pos:"n.", zh:"蜥蜴", emoji:"🦎", chunks:"liz-ard"},
+      {w:"spider", pos:"n.", zh:"蜘蛛", emoji:"🕷️", chunks:"spi-der"},
+      {w:"monkey", pos:"n.", zh:"猴子", emoji:"🐒", chunks:"mon-key"},
+      {w:"tiger", pos:"n.", zh:"老虎", emoji:"🐯", chunks:"ti-ger"}
+    ]},
+    { id:"2026-12-14", title:"12 / 14", sub:"星期一 · VB 動物 4 · VB 身體 1", words:[
+      {w:"elephant", pos:"n.", zh:"大象", emoji:"🐘", chunks:"el-e-phant"},
+      {w:"giraffe", pos:"n.", zh:"長頸鹿", emoji:"🦒", chunks:"gi-raffe"},
+      {w:"hippo", pos:"n.", zh:"河馬", emoji:"🦛", chunks:"hip-po"},
+      {w:"crocodile", pos:"n.", zh:"鱷魚", emoji:"🐊", chunks:"croc-o-dile"},
+      {w:"body", pos:"n.", zh:"身體", emoji:"🧍", chunks:"bod-y"},
+      {w:"head", pos:"n.", zh:"頭", emoji:"🙂", chunks:""}
+    ]},
+    { id:"2026-12-16", title:"12 / 16", sub:"星期三 · VB 身體 2", words:[
+      {w:"face", pos:"n.", zh:"臉", emoji:"😊", chunks:""},
+      {w:"hair", pos:"n.", zh:"頭髮", emoji:"💇", chunks:""},
+      {w:"eye", pos:"n.", zh:"眼睛", emoji:"👁️", chunks:""},
+      {w:"ear", pos:"n.", zh:"耳朵", emoji:"👂", chunks:""},
+      {w:"arm", pos:"n.", zh:"手臂", emoji:"💪", chunks:""},
+      {w:"hand", pos:"n.", zh:"手", emoji:"✋", chunks:""}
+    ]},
+    { id:"2026-12-18", title:"12 / 18", sub:"星期五 · VB 身體 3 · VB 衣服 1", words:[
+      {w:"leg", pos:"n.", zh:"腿", emoji:"🦵", chunks:""},
+      {w:"foot", pos:"n.", zh:"腳（複數 feet）", emoji:"🦶", chunks:""},
+      {w:"clothes", pos:"n.", zh:"衣服", emoji:"👚", chunks:""},
+      {w:"shirt", pos:"n.", zh:"襯衫", emoji:"👔", chunks:""},
+      {w:"T-shirt", pos:"n.", zh:"T恤", emoji:"👕", chunks:""},
+      {w:"dress", pos:"n.", zh:"洋裝", emoji:"👗", chunks:""}
+    ]},
+    { id:"2026-12-20", title:"12 / 20", sub:"星期日 · VB 衣服 2", words:[
+      {w:"jacket", pos:"n.", zh:"夾克；外套", emoji:"🧥", chunks:"jack-et"},
+      {w:"jeans", pos:"n.", zh:"牛仔褲", emoji:"👖", chunks:""},
+      {w:"trousers", pos:"n.", zh:"長褲（美式說 pants）", emoji:"👖", chunks:"trou-sers"},
+      {w:"socks", pos:"n.", zh:"襪子", emoji:"🧦", chunks:""},
+      {w:"shoes", pos:"n.", zh:"鞋子", emoji:"👟", chunks:""},
+      {w:"hat", pos:"n.", zh:"帽子", emoji:"👒", chunks:""}
+    ]},
+    { id:"2026-12-21", title:"12 / 21", sub:"星期一 · VB 衣服 3 · VB 家人 1", words:[
+      {w:"glasses", pos:"n.", zh:"眼鏡", emoji:"👓", chunks:"glass-es"},
+      {w:"handbag", pos:"n.", zh:"手提包", emoji:"👜", chunks:"hand-bag"},
+      {w:"family", pos:"n.", zh:"家人；家庭", emoji:"👨‍👩‍👧", chunks:"fam-i-ly"},
+      {w:"father", pos:"n.", zh:"父親", emoji:"👨", chunks:"fa-ther"},
+      {w:"mother", pos:"n.", zh:"母親", emoji:"👩", chunks:"moth-er"},
+      {w:"dad", pos:"n.", zh:"爸爸", emoji:"👨", chunks:""}
+    ]},
+    { id:"2026-12-23", title:"12 / 23", sub:"星期三 · VB 家人 2", words:[
+      {w:"mom", pos:"n.", zh:"媽媽（英式 mum）", emoji:"👩", chunks:""},
+      {w:"brother", pos:"n.", zh:"兄弟", emoji:"👦", chunks:"broth-er"},
+      {w:"grandfather", pos:"n.", zh:"祖父；爺爺", emoji:"👴", chunks:"grand-fa-ther"},
+      {w:"baby", pos:"n.", zh:"嬰兒；寶寶", emoji:"👶", chunks:"ba-by"},
+      {w:"child", pos:"n.", zh:"孩子", emoji:"🧒", chunks:""},
+      {w:"children", pos:"n.", zh:"孩子們（child 的複數）", emoji:"👧", chunks:"chil-dren"}
+    ]},
+    { id:"2026-12-25", title:"12 / 25", sub:"星期五 · VB 家人 3 · VB 食物 1", words:[
+      {w:"friend", pos:"n.", zh:"朋友", emoji:"🧑‍🤝‍🧑", chunks:""},
+      {w:"birthday", pos:"n.", zh:"生日", emoji:"🎂", chunks:"birth-day"},
+      {w:"food", pos:"n.", zh:"食物", emoji:"🍱", chunks:""},
+      {w:"breakfast", pos:"n.", zh:"早餐", emoji:"🍳", chunks:""},
+      {w:"lunch", pos:"n.", zh:"午餐", emoji:"🍱", chunks:""},
+      {w:"bread", pos:"n.", zh:"麵包", emoji:"🍞", chunks:""}
+    ]},
+    { id:"2026-12-27", title:"12 / 27", sub:"星期日 · VB 食物 2", words:[
+      {w:"egg", pos:"n.", zh:"蛋", emoji:"🥚", chunks:""},
+      {w:"milk", pos:"n.", zh:"牛奶", emoji:"🥛", chunks:""},
+      {w:"meat", pos:"n.", zh:"肉", emoji:"🥩", chunks:""},
+      {w:"bean", pos:"n.", zh:"豆子", emoji:"🫘", chunks:""},
+      {w:"burger", pos:"n.", zh:"漢堡", emoji:"🍔", chunks:"bur-ger"},
+      {w:"french fries", pos:"n.", zh:"薯條", emoji:"🍟", chunks:""}
+    ]},
+    { id:"2026-12-28", title:"12 / 28", sub:"星期一 · VB 食物 3", words:[
+      {w:"cake", pos:"n.", zh:"蛋糕", emoji:"🍰", chunks:""},
+      {w:"ice cream", pos:"n.", zh:"冰淇淋", emoji:"🍦", chunks:""},
+      {w:"juice", pos:"n.", zh:"果汁", emoji:"🧃", chunks:""},
+      {w:"apple", pos:"n.", zh:"蘋果", emoji:"🍎", chunks:"ap-ple"},
+      {w:"banana", pos:"n.", zh:"香蕉", emoji:"🍌", chunks:"ba-na-na"},
+      {w:"pear", pos:"n.", zh:"梨子", emoji:"🍐", chunks:""}
+    ]},
+    { id:"2026-12-30", title:"12 / 30", sub:"星期三 · VB 食物 4", words:[
+      {w:"lemon", pos:"n.", zh:"檸檬", emoji:"🍋", chunks:"lem-on"},
+      {w:"lemonade", pos:"n.", zh:"檸檬汁", emoji:"🍋", chunks:"lem-on-ade"},
+      {w:"lime", pos:"n.", zh:"萊姆", emoji:"🍈", chunks:""},
+      {w:"mango", pos:"n.", zh:"芒果", emoji:"🥭", chunks:"man-go"},
+      {w:"pineapple", pos:"n.", zh:"鳳梨", emoji:"🍍", chunks:"pine-ap-ple"},
+      {w:"coconut", pos:"n.", zh:"椰子", emoji:"🥥", chunks:"co-co-nut"}
+    ]},
+    { id:"2027-01-01", title:"1 / 1", sub:"星期五 · VB 食物 5 · VB 家 1", words:[
+      {w:"pea", pos:"n.", zh:"豌豆", emoji:"🫛", chunks:""},
+      {w:"water", pos:"n.", zh:"水", emoji:"💧", chunks:"wa-ter"},
+      {w:"watermelon", pos:"n.", zh:"西瓜", emoji:"🍉", chunks:"wa-ter-mel-on"},
+      {w:"house", pos:"n.", zh:"房子", emoji:"🏠", chunks:""},
+      {w:"room", pos:"n.", zh:"房間", emoji:"🚪", chunks:""},
+      {w:"kitchen", pos:"n.", zh:"廚房", emoji:"🍳", chunks:"kitch-en"}
+    ]},
+    { id:"2027-01-03", title:"1 / 3", sub:"星期日 · VB 家 2", words:[
+      {w:"bedroom", pos:"n.", zh:"臥室", emoji:"🛏️", chunks:"bed-room"},
+      {w:"bathroom", pos:"n.", zh:"浴室；廁所", emoji:"🛁", chunks:"bath-room"},
+      {w:"living room", pos:"n.", zh:"客廳", emoji:"🛋️", chunks:""},
+      {w:"dining room", pos:"n.", zh:"飯廳", emoji:"🍽️", chunks:""},
+      {w:"hall", pos:"n.", zh:"大廳；走廊", emoji:"🚪", chunks:""},
+      {w:"garden", pos:"n.", zh:"花園", emoji:"🌷", chunks:"gar-den"}
+    ]},
+    { id:"2027-01-04", title:"1 / 4", sub:"星期一 · VB 家 3", words:[
+      {w:"flower", pos:"n.", zh:"花", emoji:"🌼", chunks:"flow-er"},
+      {w:"tree", pos:"n.", zh:"樹", emoji:"🌳", chunks:""},
+      {w:"door", pos:"n.", zh:"門", emoji:"🚪", chunks:""},
+      {w:"window", pos:"n.", zh:"窗戶", emoji:"🪟", chunks:"win-dow"},
+      {w:"table", pos:"n.", zh:"桌子", emoji:"🪑", chunks:"ta-ble"},
+      {w:"chair", pos:"n.", zh:"椅子", emoji:"🪑", chunks:""}
+    ]},
+    { id:"2027-01-06", title:"1 / 6", sub:"星期三 · VB 家 4", words:[
+      {w:"armchair", pos:"n.", zh:"扶手椅", emoji:"🛋️", chunks:"arm-chair"},
+      {w:"sofa", pos:"n.", zh:"沙發", emoji:"🛋️", chunks:"so-fa"},
+      {w:"cupboard", pos:"n.", zh:"櫥櫃", emoji:"🗄️", chunks:"cupboard", silent:"p"},
+      {w:"clock", pos:"n.", zh:"時鐘", emoji:"🕰️", chunks:""},
+      {w:"mat", pos:"n.", zh:"墊子", emoji:"🟫", chunks:""},
+      {w:"phone", pos:"n./v.", zh:"電話；打電話", emoji:"☎️", chunks:""}
+    ]},
+    { id:"2027-01-08", title:"1 / 8", sub:"星期五 · VB 家 5", words:[
+      {w:"television", pos:"n.", zh:"電視（TV）", emoji:"📺", chunks:"tel-e-vi-sion"}
     ]}
   ]
 };
