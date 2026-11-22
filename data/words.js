@@ -549,13 +549,14 @@ window.EN_WORDS = {
     // talk 比照 walk 標 silent l；cupboard 的 p 不發音、而且切 cup-board 音塊會唸成「杯子」，
     // 所以 chunks 填整字＋silent（同 knife）；breakfast 唸 brek，切 break 會教錯，留空。
     // ─────────────────────────────────────────────────────────────────────
-    { id:"2026-11-23", title:"11 / 23", sub:"星期一 · 比較級 · VB 物品 1", words:[
+    { id:"2026-11-23", title:"11 / 23", sub:"星期一 · 比較級", words:[
       {w:"softer", pos:"adj.", zh:"比較軟的", emoji:"🧸", chunks:"soft-er"},
       {w:"harder", pos:"adj.", zh:"比較硬的", emoji:"🪨", chunks:"hard-er"},
       {w:"heavier", pos:"adj.", zh:"比較重的", emoji:"🏋️", chunks:"heav-i-er"},
       {w:"lighter", pos:"adj.", zh:"比較輕的", emoji:"🪶", chunks:"light-er"},
-      // day 太一 11/22 拿掉（11/13 就說過太簡單），這天只剩 5 字
-      {w:"computer", pos:"n.", zh:"電腦", emoji:"💻", chunks:"com-pu-ter"}
+      // day 太一 11/22 拿掉（11/13 就說過太簡單）；computer 換成 taller、再加 shorter（太一 11/22）
+      {w:"taller", pos:"adj.", zh:"比較高的", emoji:"🦒", chunks:"tall-er"},
+      {w:"shorter", pos:"adj.", zh:"比較矮的；比較短的", emoji:"📏", chunks:"short-er"}
     ]},
     { id:"2026-11-25", title:"11 / 25", sub:"星期三 · VB 物品 2 · VB 形容詞 1", words:[
       {w:"monster", pos:"n.", zh:"怪物", emoji:"👾", chunks:"mon-ster"},

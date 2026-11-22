@@ -106,6 +106,7 @@ OVERRIDE = {
     "afternoon": 32708,  # 時鐘 12→6 塗紅；預設 7268（太陽往下落）讓給 evening，兩張才分得開
     "evening": 7268,     # 查無；38567 帶驚嘆號是「晚安」問候語
     "holiday": 32416,    # 查無；32416 背包出遊露營
+    "taller": None, "shorter": None,  # 比較級跟 softer 等一樣用 emoji
     "noon": None,        # 查無，只有下午茶點心；退回 🕛
     # ── VB p2–p12＋比較級（2026-11-22）
     "lighter": None,     # 預設 4692 是打火機
