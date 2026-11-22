@@ -554,8 +554,8 @@ window.EN_WORDS = {
       {w:"harder", pos:"adj.", zh:"比較硬的", emoji:"🪨", chunks:"hard-er"},
       {w:"heavier", pos:"adj.", zh:"比較重的", emoji:"🏋️", chunks:"heav-i-er"},
       {w:"lighter", pos:"adj.", zh:"比較輕的", emoji:"🪶", chunks:"light-er"},
-      {w:"computer", pos:"n.", zh:"電腦", emoji:"💻", chunks:"com-pu-ter"},
-      {w:"day", pos:"n.", zh:"天；日子", emoji:"📅", chunks:""}
+      // day 太一 11/22 拿掉（11/13 就說過太簡單），這天只剩 5 字
+      {w:"computer", pos:"n.", zh:"電腦", emoji:"💻", chunks:"com-pu-ter"}
     ]},
     { id:"2026-11-25", title:"11 / 25", sub:"星期三 · VB 物品 2 · VB 形容詞 1", words:[
       {w:"monster", pos:"n.", zh:"怪物", emoji:"👾", chunks:"mon-ster"},
